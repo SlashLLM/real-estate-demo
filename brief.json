@@ -48,6 +48,10 @@
       "href": "/about"
     },
     {
+      "label": "Blog",
+      "href": "/blog"
+    },
+    {
       "label": "Contact",
       "href": "/contact"
     }
@@ -133,6 +137,14 @@
     "home-closing-appraisal": {
       "label": "Book my free appraisal",
       "inline": true
+    },
+    "blog-closing-valuation": {
+      "label": "Value my home now",
+      "href": "/valuation"
+    },
+    "blog-post-closing-valuation": {
+      "label": "Get my free valuation",
+      "href": "/valuation"
     }
   }
 }

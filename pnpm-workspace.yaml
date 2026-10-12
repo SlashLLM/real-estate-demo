@@ -5,6 +5,7 @@ packages:
 # The TotalWeb modules reference each other with workspace:* inside their monorepo;
 # point those at the same file: copies here.
 overrides:
+  "@totalweb/blog": "file:./vendor/totalweb/blog"
   "@totalweb/crm": "file:./vendor/totalweb/crm"
   "@totalweb/social": "file:./vendor/totalweb/social"
   "@totalweb/supabase": "file:./vendor/totalweb/supabase"

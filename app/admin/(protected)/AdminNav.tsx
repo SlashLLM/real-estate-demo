@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 // AI studio lives inside Social (its sub-nav), so the top bar only lists the sections.
 const SECTIONS = [
   ["Social", "/admin/social"],
+  ["Blog", "/admin/blog"],
   ["CRM", "/admin/crm"],
 ] as const;
 

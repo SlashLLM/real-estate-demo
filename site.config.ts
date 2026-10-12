@@ -35,12 +35,24 @@ export const site = {
       "href": "/about"
     },
     {
+      "label": "Blog",
+      "href": "/blog"
+    },
+    {
       "label": "Contact",
       "href": "/contact"
     }
   ],
   "social": {},
   "ctas": {
+    "blog-closing-valuation": {
+      "label": "Value my home now",
+      "href": "/valuation"
+    },
+    "blog-post-closing-valuation": {
+      "label": "Get my free valuation",
+      "href": "/valuation"
+    },
     "header-primary": {
       "label": "Free valuation",
       "href": "/valuation"
