@@ -1,0 +1,358 @@
+@import "tailwindcss";
+@import "@totalweb/ui/theme.css";
+
+/* Tailwind scans the TotalWeb module source (copied into node_modules) for class names. */
+@source "../node_modules/@totalweb/ui/src";
+@source "../node_modules/@totalweb/crm/src";
+@source "../node_modules/@totalweb/social/src";
+
+/*
+ * PropertyPro AI. Layout and type follow the SmartHomes site (C:\SlashLLM\smarthomes): Plus Jakarta Sans, heavy
+ * tight headlines, uppercase label pills, thick-bordered rounded cards, a wave-edged hero and a proof ticker.
+ * Colour stays the light "clear sky" palette. Light only: <html data-theme="light"> keeps the TotalWeb dark tokens
+ * off, and the admin modules (social manager, CRM) inherit the same --tw-* variables.
+ */
+:root,
+:root[data-theme="light"] {
+  --tw-bg: #ffffff;
+  --tw-surface: #ffffff;
+  --tw-surface-2: #f5f8fe;
+  --tw-border: #dde6f6;
+  --tw-fg: #15213b;
+  --tw-muted: #5a6782;
+  --tw-primary: #2453c4;
+  --tw-primary-fg: #ffffff;
+  --tw-danger: #b42318;
+  --tw-radius: 16px;
+  --pp-accent: #2453c4;
+  --pp-accent-dark: #1b3f99;
+  --pp-lime: #e3ec9a;
+  --pp-sky: #eaf1ff;
+  --pp-cream: #f6f9ff; /* SmartHomes' cream, in blue */
+  --pp-papaya: #eef3ff; /* SmartHomes' papaya band, in blue */
+  --pp-highlight: #dbe6ff; /* the "2× more." highlight pill */
+  --pp-primary-soft: #eef3ff;
+  --pp-ink-panel: #eef3ff;
+  --pp-ink-panel-fg: #15213b;
+  --pp-ink-panel-muted: #4b5878;
+  --pp-shadow: 0 20px 50px -24px rgb(21 33 59 / 0.22);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-accent: var(--pp-accent);
+  --color-accent-dark: var(--pp-accent-dark);
+  --color-lime: var(--pp-lime);
+  --color-sky: var(--pp-sky);
+  --color-cream: var(--pp-cream);
+  --color-papaya: var(--pp-papaya);
+  --color-highlight: var(--pp-highlight);
+  --color-primary-soft: var(--pp-primary-soft);
+  --color-panel: var(--pp-ink-panel);
+  --color-panel-fg: var(--pp-ink-panel-fg);
+  --color-panel-muted: var(--pp-ink-panel-muted);
+  --font-display: var(--font-jakarta), system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-mono: var(--font-jakarta), system-ui, sans-serif;
+}
+
+body {
+  background: var(--tw-bg);
+  color: var(--tw-fg);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* ---------- site primitives ---------- */
+.wrap {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .wrap {
+    padding-inline: 32px;
+  }
+}
+.section {
+  padding-block: clamp(72px, 9vw, 112px);
+}
+/* SmartHomes headline: extra-bold, tight */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  font-variant-numeric: lining-nums;
+}
+.display em {
+  font-style: normal;
+  color: var(--tw-primary);
+}
+/* Highlighted phrase: tinted pill with a hand-drawn underline (SmartHomes' "2× more.") */
+.hl {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.18em;
+  margin-left: -0.04em;
+  border-radius: 0.28em;
+  background: var(--pp-highlight);
+  color: var(--tw-primary);
+  white-space: nowrap;
+}
+.hl::after {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: -0.12em;
+  height: 0.16em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 8c30-6 60 2 98-2s66-4 98 0' fill='none' stroke='%232453c4' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+/* Label pill above section headings: uppercase, bold, wide tracking */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--pp-highlight);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pp-accent-dark);
+}
+/* Plain uppercase label (calculator header, stat captions) */
+.caps {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.rule {
+  border-top: 1px solid var(--tw-border);
+}
+.accent-rule {
+  display: block;
+  width: 48px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--tw-primary);
+}
+/* SmartHomes card: white, thick soft border, big radius, warm drop shadow */
+.card {
+  background: var(--tw-surface);
+  border: 2px solid var(--tw-border);
+  border-radius: 24px;
+  box-shadow: var(--pp-shadow);
+}
+.card-flat {
+  background: var(--tw-surface);
+  border: 1px solid var(--tw-border);
+  border-radius: 20px;
+}
+.sky {
+  background:
+    radial-gradient(55% 50% at 85% 10%, rgb(204 222 255 / 0.65), transparent 70%),
+    radial-gradient(45% 45% at 5% 90%, rgb(227 236 154 / 0.22), transparent 70%),
+    linear-gradient(180deg, #f6f9ff 0%, #eaf1ff 100%);
+}
+.wash {
+  background: var(--pp-cream);
+}
+.band {
+  background: var(--pp-papaya);
+}
+.mark {
+  background: linear-gradient(transparent 60%, var(--pp-highlight) 60%);
+  padding-inline: 2px;
+}
+
+/* Buttons (CTA component) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+}
+.btn .arrow {
+  transition: transform 0.15s;
+}
+.btn:hover .arrow {
+  transform: translateX(2px);
+}
+.btn-primary {
+  background: var(--tw-primary);
+  color: var(--tw-primary-fg);
+  box-shadow: 0 10px 24px -12px rgb(36 83 196 / 0.7);
+}
+.btn-primary:hover {
+  background: var(--pp-accent-dark);
+}
+.btn-outline {
+  border: 2px solid var(--tw-border);
+  background: var(--tw-surface);
+  color: var(--tw-fg);
+}
+.btn-outline:hover {
+  border-color: var(--tw-primary);
+  color: var(--tw-primary);
+}
+.btn-light {
+  background: var(--pp-highlight);
+  color: var(--pp-accent-dark);
+}
+.btn-light:hover {
+  background: color-mix(in srgb, var(--pp-highlight) 80%, var(--tw-primary));
+}
+.btn-sm {
+  min-height: 44px;
+  padding: 0 1.15rem;
+  font-size: 14px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--tw-primary);
+  outline-offset: 2px;
+}
+
+/* Form fields: SmartHomes' tinted, rounded inputs with uppercase labels */
+.field {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--tw-border);
+  background: var(--pp-cream);
+  border-radius: 16px;
+  padding: 0 14px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tw-fg);
+}
+.field::placeholder {
+  color: #8592ab;
+}
+.field:focus {
+  outline: none;
+  background: var(--tw-surface);
+  border-color: var(--tw-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tw-primary) 16%, transparent);
+}
+.field-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tw-muted);
+  margin-bottom: 6px;
+}
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--pp-cream);
+  border: 1px solid var(--tw-border);
+}
+.seg button {
+  min-height: 40px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tw-muted);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--tw-surface);
+  color: var(--tw-primary);
+  box-shadow: 0 1px 3px rgb(21 33 59 / 0.12);
+}
+
+/* Lead forms rendered by @totalweb/crm adopt the site's field style */
+.lead-form input:not([type="checkbox"]),
+.lead-form textarea,
+.lead-form select {
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: 16px;
+  background: var(--pp-cream);
+}
+.lead-form label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tw-muted);
+}
+.lead-form button[type="submit"] {
+  min-height: 48px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+/* Proof ticker (SmartHomes' marquee) */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+/* Motion */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.rise-2 {
+  animation: rise 0.6s 0.12s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

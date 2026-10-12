@@ -1,0 +1,7 @@
+node_modules
+.next
+.env
+.env.local
+e2e/.auth
+e2e/.results
+e2e/.report

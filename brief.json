@@ -1,0 +1,138 @@
+{
+  "name": "PropertyPro AI",
+  "tagline": "Know what your Singapore home is worth, in 30 seconds.",
+  "website": "",
+  "niche": "Personal real estate agent platform for Singapore homeowners: instant AI home valuations for HDB flats, condos, ECs and landed homes, followed by personal selling, buying and upgrading advice from a CEA-registered agent.",
+  "description": "PropertyPro AI is a personal real estate agent service in Singapore. Homeowners enter a postal code and get a free, instant indicative valuation built from recent HDB resale transactions (data.gov.sg) and current private-market listings, with the full report (comparable sales, lease decay, pricing strategy) unlocked by name, phone and email. The agent then follows up personally to help the owner sell, upgrade or buy.",
+  "audience": "Singapore HDB and private-property owners aged 30-60 who are thinking about selling, right-sizing or upgrading in the next 12 months, plus first-time and upgrading buyers who want an agent who prices with data rather than guesswork.",
+  "voice": "Calm, precise and plain-spoken. Leads with numbers and evidence, explains Singapore-specific rules (lease decay, MOP, ABSD, cash over valuation) without jargon, never hypes the market, and always offers a clear next step.",
+  "locale": "en-SG",
+  "competitors": [
+    "SRX",
+    "99.co",
+    "PropertyGuru",
+    "Cashew",
+    "EdgeProp",
+    "Ohmyhome"
+  ],
+  "colors": [
+    "#2453C4",
+    "#E3EC9A",
+    "#FFFFFF",
+    "#15213B"
+  ],
+  "contact": {
+    "email": "hello@propertypro.ai",
+    "phone": "+65 8123 4567",
+    "address": "PropertyPro Realty, 1 Bishan Place, #08-01, Singapore 579837"
+  },
+  "nav": [
+    {
+      "label": "Home",
+      "href": "/"
+    },
+    {
+      "label": "Free valuation",
+      "href": "/valuation"
+    },
+    {
+      "label": "Sell",
+      "href": "/sell"
+    },
+    {
+      "label": "Buy",
+      "href": "/buy"
+    },
+    {
+      "label": "About",
+      "href": "/about"
+    },
+    {
+      "label": "Contact",
+      "href": "/contact"
+    }
+  ],
+  "social": {},
+  "ctas": {
+    "header-primary": {
+      "label": "Free valuation",
+      "href": "/valuation"
+    },
+    "home-hero-valuation": {
+      "label": "Unlock my full report",
+      "inline": true
+    },
+    "home-hero-book-call": {
+      "label": "Talk to an agent",
+      "href": "/contact"
+    },
+    "home-sell-plan": {
+      "label": "Get my selling plan",
+      "href": "/contact"
+    },
+    "home-closing-valuation": {
+      "label": "Value my home now",
+      "href": "/valuation"
+    },
+    "valuation-tool-report": {
+      "label": "Unlock my full report",
+      "inline": true
+    },
+    "valuation-closing-call": {
+      "label": "Book a pricing consultation",
+      "href": "/contact"
+    },
+    "sell-hero-appraisal": {
+      "label": "Book a home appraisal",
+      "href": "/contact"
+    },
+    "sell-inline-plan": {
+      "label": "Send me my selling plan",
+      "inline": true
+    },
+    "sell-closing-valuation": {
+      "label": "Start with a free valuation",
+      "href": "/valuation"
+    },
+    "buy-hero-shortlist": {
+      "label": "Get a shortlist",
+      "href": "/contact"
+    },
+    "buy-inline-brief": {
+      "label": "Send me matching homes",
+      "inline": true
+    },
+    "about-closing-call": {
+      "label": "Book a 15-minute call",
+      "href": "/contact"
+    },
+    "footer-contact": {
+      "label": "Speak to your agent",
+      "href": "/contact"
+    },
+    "footer-valuation": {
+      "label": "Free home valuation",
+      "href": "/valuation"
+    },
+    "nav-valuation": {
+      "label": "Free valuation",
+      "href": "/valuation"
+    },
+    "nav-contact": {
+      "label": "Contact",
+      "href": "/contact"
+    },
+    "footer-nav-valuation": {
+      "label": "Free valuation",
+      "href": "/valuation"
+    },
+    "footer-nav-contact": {
+      "label": "Contact",
+      "href": "/contact"
+    },
+    "home-closing-appraisal": {
+      "label": "Book my free appraisal",
+      "inline": true
+    }
+  }
+}
