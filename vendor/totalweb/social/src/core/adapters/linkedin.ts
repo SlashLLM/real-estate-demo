@@ -4,13 +4,16 @@ import { PlatformError, type AccountContext, type AppCredentials, type PlatformA
 const AUTH = "https://www.linkedin.com/oauth/v2/authorization";
 const TOKEN = "https://www.linkedin.com/oauth/v2/accessToken";
 const REST = "https://api.linkedin.com/rest";
-/** LinkedIn versions its REST API monthly (YYYYMM); bump when LinkedIn sunsets this one. */
-export const LINKEDIN_VERSION = "202509";
+/**
+ * LinkedIn versions its REST API monthly (YYYYMM) and switches each version off about a year after release (calls then
+ * fail with 426 "Requested version … is not active"). Bump this before then, or set LINKEDIN_API_VERSION to override.
+ */
+export const LINKEDIN_VERSION = "202608";
 const SCOPES = ["openid", "profile", "email", "w_member_social"];
 
 /** LinkedIn Posts API (member posts). Org pages need w_organization_social + an org author URN in settings. */
 export function linkedin(app: AppCredentials): PlatformAdapter {
-  const headers = { "LinkedIn-Version": LINKEDIN_VERSION, "X-Restli-Protocol-Version": "2.0.0" };
+  const headers = { "LinkedIn-Version": app.apiVersion ?? LINKEDIN_VERSION, "X-Restli-Protocol-Version": "2.0.0" };
   const author = (a: AccountContext) => (a.settings.author_urn as string) ?? `urn:li:person:${a.externalId}`;
 
   const toTokens = (t: any) => ({

@@ -76,6 +76,8 @@ export interface AccountMetrics {
 export interface AppCredentials {
   clientId: string;
   clientSecret: string;
+  /** Overrides a versioned API's pinned version (e.g. LINKEDIN_API_VERSION=202609). */
+  apiVersion?: string;
 }
 
 export interface PlatformAdapter {

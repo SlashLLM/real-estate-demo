@@ -39,7 +39,7 @@ export function getAdapter(platform: PlatformKey, env: (name: string) => string 
   const clientId = env(idVar);
   const clientSecret = env(secretVar);
   if (!clientId || !clientSecret) throw new Error(`${platform} is not configured: set ${idVar} and ${secretVar}`);
-  return FACTORIES[platform]({ clientId, clientSecret });
+  return FACTORIES[platform]({ clientId, clientSecret, apiVersion: env(`${platform.toUpperCase()}_API_VERSION`) || undefined });
 }
 
 export function isConfigured(platform: PlatformKey, env: (name: string) => string | undefined) {
