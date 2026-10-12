@@ -1,0 +1,21 @@
+{
+  "name": "@totalweb/supabase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./middleware": "./src/middleware.ts",
+    "./admin": "./src/admin.ts",
+    "./workspace": "./src/workspace.ts"
+  },
+  "scripts": { "typecheck": "tsc -p ." },
+  "dependencies": {
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.58.0"
+  },
+  "peerDependencies": { "next": ">=15" },
+  "devDependencies": { "next": "^16.0.0", "typescript": "^5.9.0" }
+}

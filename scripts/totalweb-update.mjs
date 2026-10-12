@@ -1,10 +1,23 @@
-// Re-copies the TotalWeb modules (installed as `file:` dependencies) from C:/SlashLLM/TotalWeb/packages.
+// Refreshes the TotalWeb modules. They are vendored in vendor/totalweb (committed, so hosts like Vercel can install
+// them) and installed from there as `file:` dependencies. First re-copy vendor/totalweb from C:/SlashLLM/TotalWeb/packages
+// (skipped where that folder doesn't exist, e.g. on a build server).
 // pnpm keeps its first copy of a file: dependency and skips installs it thinks are up to date, so plain
 // `pnpm install --force` never picks up new or changed module files. Drop the copies and pnpm's
 // "already up to date" state, then install again.
 // Afterwards, copy any new module migrations into supabase/migrations so `npx supabase db push` applies them.
 import { execSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+
+const SOURCE = "C:/SlashLLM/TotalWeb/packages";
+const MODULES = ["crm", "social", "supabase", "ui"];
+if (existsSync(SOURCE)) {
+  for (const m of MODULES) {
+    rmSync(`vendor/totalweb/${m}`, { recursive: true, force: true });
+    cpSync(`${SOURCE}/${m}`, `vendor/totalweb/${m}`, { recursive: true });
+    rmSync(`vendor/totalweb/${m}/node_modules`, { recursive: true, force: true });
+  }
+  console.log(`vendor/totalweb refreshed from ${SOURCE}. Commit it so deploys get the same modules.`);
+}
 
 const store = "node_modules/.pnpm";
 if (existsSync(store)) {

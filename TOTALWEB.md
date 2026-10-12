@@ -1,7 +1,8 @@
 # PropertyPro AI: TotalWeb site
 
-Generated from `C:/SlashLLM/TotalWeb/templates/site`. Reusable modules come from `C:/SlashLLM/TotalWeb/packages`
-(installed as `file:` deps; refresh with `pnpm totalweb:update`).
+Generated from `C:/SlashLLM/TotalWeb/templates/site`. Reusable modules come from `C:/SlashLLM/TotalWeb/packages`,
+vendored into `vendor/totalweb/` (committed, so Vercel and other build machines can install them) and installed from
+there as `file:` deps. `pnpm totalweb:update` re-copies them from TotalWeb and reinstalls; commit `vendor/` afterwards.
 
 | Path | What |
 |---|---|

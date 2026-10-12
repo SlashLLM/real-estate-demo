@@ -1,0 +1,29 @@
+{
+  "name": "@totalweb/social",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core": "./src/core/index.ts",
+    "./components": "./src/components/index.ts",
+    "./pages": "./src/pages/index.tsx",
+    "./server": "./src/server/index.ts"
+  },
+  "scripts": { "typecheck": "tsc -p .", "test": "vitest run" },
+  "dependencies": {
+    "@totalweb/supabase": "workspace:*",
+    "@totalweb/ui": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "peerDependencies": { "next": ">=15", "react": ">=19" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "msw": "^2.10.0",
+    "next": "^16.0.0",
+    "react": "^19.1.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

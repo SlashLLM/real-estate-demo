@@ -5,10 +5,10 @@ packages:
 # The TotalWeb modules reference each other with workspace:* inside their monorepo;
 # point those at the same file: copies here.
 overrides:
-  "@totalweb/crm": "file:C:/SlashLLM/TotalWeb/packages/crm"
-  "@totalweb/social": "file:C:/SlashLLM/TotalWeb/packages/social"
-  "@totalweb/supabase": "file:C:/SlashLLM/TotalWeb/packages/supabase"
-  "@totalweb/ui": "file:C:/SlashLLM/TotalWeb/packages/ui"
+  "@totalweb/crm": "file:./vendor/totalweb/crm"
+  "@totalweb/social": "file:./vendor/totalweb/social"
+  "@totalweb/supabase": "file:./vendor/totalweb/supabase"
+  "@totalweb/ui": "file:./vendor/totalweb/ui"
 
 allowBuilds:
   esbuild: true

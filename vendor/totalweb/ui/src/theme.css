@@ -1,0 +1,94 @@
+/*
+ * TotalWeb theme tokens. Each client site overrides these variables to re-skin every module.
+ * Consumed through Tailwind v4 `@theme inline` so classes like bg-surface / text-muted work.
+ */
+:root {
+  --tw-bg: #fafaf9;
+  --tw-surface: #ffffff;
+  --tw-surface-2: #f4f4f2;
+  --tw-border: #e5e5e2;
+  --tw-fg: #1c1c1a;
+  --tw-muted: #6b6b66;
+  --tw-primary: #2f5bea;
+  --tw-primary-fg: #ffffff;
+  --tw-danger: #d33a2c;
+  --tw-success: #1f8a4c;
+  --tw-warning: #b7791f;
+  --tw-radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --tw-bg: #121211;
+    --tw-surface: #1b1b1a;
+    --tw-surface-2: #242422;
+    --tw-border: #33332f;
+    --tw-fg: #ededea;
+    --tw-muted: #9a9a94;
+    --tw-primary: #6b8cff;
+    --tw-primary-fg: #0d0d0c;
+  }
+}
+:root[data-theme="dark"] {
+  --tw-bg: #121211;
+  --tw-surface: #1b1b1a;
+  --tw-surface-2: #242422;
+  --tw-border: #33332f;
+  --tw-fg: #ededea;
+  --tw-muted: #9a9a94;
+  --tw-primary: #6b8cff;
+  --tw-primary-fg: #0d0d0c;
+}
+
+/* Scrollbars wear the theme: native dark controls in dark mode, and a thin thumb in the site's own colours on every
+   scrolling area (pages, sidebars, pickers, modals). Sites re-skin them by overriding the --tw-* tokens. */
+:root {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--tw-muted) 45%, transparent) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--tw-muted) 45%, transparent);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--tw-muted) 70%, transparent);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--tw-bg);
+  --color-surface: var(--tw-surface);
+  --color-surface-2: var(--tw-surface-2);
+  --color-border: var(--tw-border);
+  --color-fg: var(--tw-fg);
+  --color-muted: var(--tw-muted);
+  --color-primary: var(--tw-primary);
+  --color-primary-fg: var(--tw-primary-fg);
+  --color-danger: var(--tw-danger);
+  --color-success: var(--tw-success);
+  --color-warning: var(--tw-warning);
+  --radius-ui: var(--tw-radius);
+}

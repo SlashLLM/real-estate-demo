@@ -5,27 +5,27 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@totalweb/crm': file:C:/SlashLLM/TotalWeb/packages/crm
-  '@totalweb/social': file:C:/SlashLLM/TotalWeb/packages/social
-  '@totalweb/supabase': file:C:/SlashLLM/TotalWeb/packages/supabase
-  '@totalweb/ui': file:C:/SlashLLM/TotalWeb/packages/ui
+  '@totalweb/crm': file:./vendor/totalweb/crm
+  '@totalweb/social': file:./vendor/totalweb/social
+  '@totalweb/supabase': file:./vendor/totalweb/supabase
+  '@totalweb/ui': file:./vendor/totalweb/ui
 
 importers:
 
   .:
     dependencies:
       '@totalweb/crm':
-        specifier: file:C:/SlashLLM/TotalWeb/packages/crm
-        version: file:../TotalWeb/packages/crm(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: file:vendor/totalweb/crm
+        version: file:vendor/totalweb/crm(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@totalweb/social':
-        specifier: file:C:/SlashLLM/TotalWeb/packages/social
-        version: file:../TotalWeb/packages/social(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
+        specifier: file:vendor/totalweb/social
+        version: file:vendor/totalweb/social(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
       '@totalweb/supabase':
-        specifier: file:C:/SlashLLM/TotalWeb/packages/supabase
-        version: file:../TotalWeb/packages/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
+        specifier: file:vendor/totalweb/supabase
+        version: file:vendor/totalweb/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
       '@totalweb/ui':
-        specifier: file:C:/SlashLLM/TotalWeb/packages/ui
-        version: file:../TotalWeb/packages/ui(react@19.3.0)
+        specifier: file:vendor/totalweb/ui
+        version: file:vendor/totalweb/ui(react@19.3.0)
       next:
         specifier: ^16.0.0
         version: 16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -462,25 +462,25 @@ packages:
   '@tailwindcss/postcss@4.3.3':
     resolution: {integrity: sha512-JTSZZGQi1AyKirbLN3azmjVzef92tcX7h+iSqPdaeStyFpGpDlKvvpxeOE8njhbUanbRwr3z8DyzhICWnMtQeg==}
 
-  '@totalweb/crm@file:../TotalWeb/packages/crm':
-    resolution: {directory: ../TotalWeb/packages/crm, type: directory}
+  '@totalweb/crm@file:vendor/totalweb/crm':
+    resolution: {directory: vendor/totalweb/crm, type: directory}
     peerDependencies:
       next: '>=15'
       react: '>=19'
 
-  '@totalweb/social@file:../TotalWeb/packages/social':
-    resolution: {directory: ../TotalWeb/packages/social, type: directory}
+  '@totalweb/social@file:vendor/totalweb/social':
+    resolution: {directory: vendor/totalweb/social, type: directory}
     peerDependencies:
       next: '>=15'
       react: '>=19'
 
-  '@totalweb/supabase@file:../TotalWeb/packages/supabase':
-    resolution: {directory: ../TotalWeb/packages/supabase, type: directory}
+  '@totalweb/supabase@file:vendor/totalweb/supabase':
+    resolution: {directory: vendor/totalweb/supabase, type: directory}
     peerDependencies:
       next: '>=15'
 
-  '@totalweb/ui@file:../TotalWeb/packages/ui':
-    resolution: {directory: ../TotalWeb/packages/ui, type: directory}
+  '@totalweb/ui@file:vendor/totalweb/ui':
+    resolution: {directory: vendor/totalweb/ui, type: directory}
     peerDependencies:
       react: '>=19'
 
@@ -1043,11 +1043,11 @@ snapshots:
       postcss: 8.5.29
       tailwindcss: 4.3.3
 
-  '@totalweb/crm@file:../TotalWeb/packages/crm(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@totalweb/crm@file:vendor/totalweb/crm(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@dnd-kit/core': 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@totalweb/supabase': file:../TotalWeb/packages/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
-      '@totalweb/ui': file:../TotalWeb/packages/ui(react@19.3.0)
+      '@totalweb/supabase': file:vendor/totalweb/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
+      '@totalweb/ui': file:vendor/totalweb/ui(react@19.3.0)
       next: 16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       zod: 4.6.5
@@ -1055,17 +1055,17 @@ snapshots:
       - '@opentelemetry/api'
       - react-dom
 
-  '@totalweb/social@file:../TotalWeb/packages/social(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)':
+  '@totalweb/social@file:vendor/totalweb/social(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@totalweb/supabase': file:../TotalWeb/packages/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
-      '@totalweb/ui': file:../TotalWeb/packages/ui(react@19.3.0)
+      '@totalweb/supabase': file:vendor/totalweb/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
+      '@totalweb/ui': file:vendor/totalweb/ui(react@19.3.0)
       next: 16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       zod: 4.6.5
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@totalweb/supabase@file:../TotalWeb/packages/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))':
+  '@totalweb/supabase@file:vendor/totalweb/supabase(next@16.4.0(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))':
     dependencies:
       '@supabase/ssr': 0.7.0(@supabase/supabase-js@2.117.3)
       '@supabase/supabase-js': 2.117.3
@@ -1073,7 +1073,7 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@totalweb/ui@file:../TotalWeb/packages/ui(react@19.3.0)':
+  '@totalweb/ui@file:vendor/totalweb/ui(react@19.3.0)':
     dependencies:
       clsx: 2.1.1
       react: 19.3.0
