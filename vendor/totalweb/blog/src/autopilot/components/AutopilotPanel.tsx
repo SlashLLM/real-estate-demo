@@ -2,13 +2,24 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, Input, Label, Select, Textarea } from "@totalweb/ui";
+import { Badge, Button, Card, Input, Label, LocalTime, Select, Textarea, useHydrated } from "@totalweb/ui";
 import { PLATFORMS, supportsPostType } from "@totalweb/social/core";
 import type { Account, VoiceProfile } from "@totalweb/social";
 import { refreshRuns, runNow, saveSchedule } from "../actions";
 import { INTERVAL_PRESETS, LIMITS, type AutopilotKind, type AutopilotRun, type AutopilotSchedule, type RunItem } from "../plan";
 
-const fmt = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—");
+/** A time in the viewer's timezone (hydration-safe: see LocalTime). `relative` prefixes "goes out"/"out". */
+function When({ iso, relative = false }: { iso: string | null | undefined; relative?: boolean }) {
+  const hydrated = useHydrated();
+  if (!relative) return <LocalTime value={iso} />;
+  const future = hydrated && !!iso && new Date(iso) > new Date();
+  return (
+    <>
+      {hydrated ? (future ? "goes out " : "out ") : ""}
+      <LocalTime value={iso} />
+    </>
+  );
+}
 
 export function AutopilotPanel({
   schedules,
@@ -175,8 +186,8 @@ function ScheduleCard({
         </div>
         <div className="text-sm">
           <p className="text-muted">Next run</p>
-          <p className="font-medium">{s?.enabled ? fmt(s.next_run_at) : "Off"}</p>
-          <p className="mt-1 text-xs text-muted">Last run {fmt(s?.last_run_at)}</p>
+          <p className="font-medium">{s?.enabled ? <When iso={s.next_run_at} /> : "Off"}</p>
+          <p className="mt-1 text-xs text-muted">Last run <When iso={s?.last_run_at} /></p>
         </div>
       </div>
 
@@ -306,7 +317,7 @@ function RunsTable({ runs }: { runs: AutopilotRun[] }) {
           <details key={r.id} className="rounded-ui border border-border p-3 text-sm">
             <summary className="flex cursor-pointer flex-wrap items-center gap-2">
               <Badge tone={RUN_TONE[r.status]}>{r.status}</Badge>
-              <span>{fmt(r.started_at)}</span>
+              <When iso={r.started_at} />
               <span className="text-muted">· {summary(r.items)}</span>
             </summary>
             {r.error && <p className="mt-2 text-danger">{r.error}</p>}
@@ -317,7 +328,11 @@ function RunsTable({ runs }: { runs: AutopilotRun[] }) {
                   <li key={i.ref} className="flex flex-wrap items-center gap-2">
                     <Badge tone={ITEM_TONE[i.state]}>{i.state.replace("_", " ")}</Badge>
                     <span>{i.label ?? i.kind}</span>
-                    {i.at && i.state === "done" && <span className="text-muted">· {new Date(i.at) > new Date() ? `goes out ${fmt(i.at)}` : `out ${fmt(i.at)}`}</span>}
+                    {i.at && i.state === "done" && (
+                      <span className="text-muted">
+                        · <When iso={i.at} relative />
+                      </span>
+                    )}
                     {i.error && <span className="text-xs text-muted">· {i.error}</span>}
                   </li>
                 ))}

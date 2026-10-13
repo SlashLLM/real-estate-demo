@@ -11,12 +11,14 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { Badge, Button, Input, Label, Modal, Select } from "@totalweb/ui";
+import { Badge, Button, Input, Label, LocalNumber, Modal, Select } from "@totalweb/ui";
 import { moveDeal, saveDeal } from "../server/actions";
 import { contactName, type Contact, type Deal, type Stage } from "../types";
 
-const money = (n: number, currency = "USD") =>
-  Number(n).toLocaleString(undefined, { style: "currency", currency, maximumFractionDigits: 0 });
+/** Hydration-safe: en-US until hydrated (as the server renders it), then the viewer's locale. */
+function Money({ n, currency = "USD" }: { n: number; currency?: string }) {
+  return <LocalNumber value={Number(n)} options={{ style: "currency", currency, maximumFractionDigits: 0 }} />;
+}
 
 /** Position for a card dropped at the end of a column: after the current last card. */
 export function nextPosition(deals: Deal[], stageId: string) {
@@ -62,7 +64,8 @@ export function DealsKanban({
 
   return (
     <>
-      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+      {/* A fixed id: dnd-kit otherwise numbers its accessibility ids per page load, which breaks hydration. */}
+      <DndContext id="deals-kanban" sensors={sensors} onDragEnd={onDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
           {stages.map((stage) => {
             const items = byStage.get(stage.id) ?? [];
@@ -73,7 +76,7 @@ export function DealsKanban({
                   <div>
                     <p className="text-sm font-medium">{stage.name}</p>
                     <p className="text-xs text-muted tabular-nums">
-                      {items.length} · {money(total)}
+                      {items.length} · <Money n={total} />
                     </p>
                   </div>
                   {stage.kind === "open" && (
@@ -176,7 +179,7 @@ function DealCard({ deal }: { deal: Deal }) {
       className={`cursor-grab rounded-ui border border-border bg-surface p-3 text-sm shadow-sm ${isDragging ? "z-10 opacity-80 shadow-lg" : ""}`}
     >
       <p className="font-medium">{deal.title}</p>
-      <p className="mt-1 tabular-nums">{money(deal.amount, deal.currency)}</p>
+      <p className="mt-1 tabular-nums"><Money n={deal.amount} currency={deal.currency} /></p>
       <div className="mt-2 flex flex-wrap gap-1 text-xs text-muted">
         {deal.contact && <span>{contactName(deal.contact)}</span>}
         {deal.company && <span>· {deal.company.name}</span>}

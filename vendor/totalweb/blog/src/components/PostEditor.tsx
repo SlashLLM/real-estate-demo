@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, Input, Label, Textarea } from "@totalweb/ui";
+import { Badge, Button, Card, Input, Label, LocalTime, Textarea } from "@totalweb/ui";
 import { blocksPublish, DESC_MAX, seoChecklist, slugify, TITLE_MAX, wordCount } from "../core/seo.ts";
 import { canTransition } from "../core/status.ts";
 import {
@@ -18,7 +18,7 @@ import {
 } from "../server/actions";
 import type { BlogPost, FaqItem } from "../types";
 import { Markdown } from "./Markdown";
-import { PostStatusBadge, fmtDate } from "./shared";
+import { PostStatusBadge } from "./shared";
 
 type Form = Omit<SavePostInput, "secondary_keywords" | "tags" | "faq"> & { secondary_keywords: string; tags: string; faq: FaqItem[] };
 
@@ -102,7 +102,11 @@ export function PostEditor({
           <div className="flex flex-wrap items-center gap-2">
             <PostStatusBadge status={post.status} />
             {post.ai_generated && <Badge tone="primary">AI draft</Badge>}
-            {post.status === "scheduled" && <span className="text-xs text-muted">Goes live {fmtDate(post.published_at)}</span>}
+            {post.status === "scheduled" && (
+              <span className="text-xs text-muted">
+                Goes live <LocalTime value={post.published_at} />
+              </span>
+            )}
             {!saved && <span className="text-xs text-warning">Unsaved changes</span>}
             <div className="flex-1" />
             {live && (
@@ -313,7 +317,7 @@ export function PostEditor({
             <h2 className="mb-1 font-medium">History</h2>
             {revisions.map((r) => (
               <p key={r.id} className="text-muted">
-                {r.source === "ai" ? "AI draft" : "Edited"} · {fmtDate(r.created_at)}
+                {r.source === "ai" ? "AI draft" : "Edited"} · <LocalTime value={r.created_at} />
               </p>
             ))}
           </Card>

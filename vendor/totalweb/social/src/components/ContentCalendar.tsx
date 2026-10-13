@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@totalweb/ui";
+import { Button, formatDateTime, useHydrated } from "@totalweb/ui";
 import { PLATFORMS } from "../core/platforms.ts";
 import type { Account, MediaAsset, Post } from "../types";
 import { PostComposerModal, type ComposerInitial } from "./PostComposerModal";
@@ -11,6 +11,11 @@ import { StatusBadge } from "./shared";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const key = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+/** The day a post falls on: the viewer's local day once hydrated; before that UTC, which the server renders too. */
+const dayOf = (iso: string, hydrated: boolean) => {
+  const d = new Date(iso);
+  return hydrated ? key(d) : `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+};
 
 export function postToInitial(p: Post): ComposerInitial {
   return {
@@ -51,17 +56,23 @@ export function ContentCalendar({
   const start = new Date(first);
   start.setDate(1 - first.getDay());
   const days = Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
-  const today = key(new Date());
+  // Days, "today" and post times depend on the viewer's timezone, which the server doesn't know: render them from
+  // the hydrated flag so the first client render matches the server's HTML, then switch to local time.
+  const hydrated = useHydrated();
+  const today = hydrated ? key(new Date()) : null;
+  const monthLabel = hydrated
+    ? first.toLocaleDateString(undefined, { month: "long", year: "numeric" })
+    : new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
 
   const byDay = useMemo(() => {
     const map = new Map<string, Post[]>();
     for (const p of posts) {
       if (!p.scheduled_at) continue;
-      const k = key(new Date(p.scheduled_at));
+      const k = dayOf(p.scheduled_at, hydrated);
       map.set(k, [...(map.get(k) ?? []), p]);
     }
     return map;
-  }, [posts]);
+  }, [posts, hydrated]);
 
   const go = (delta: number) => {
     const d = new Date(y, m - 1 + delta, 1);
@@ -79,7 +90,7 @@ export function ContentCalendar({
         <Button variant="secondary" size="sm" onClick={() => go(-1)} aria-label="Previous month">
           ‹
         </Button>
-        <h2 className="min-w-40 text-center font-medium">{first.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h2>
+        <h2 className="min-w-40 text-center font-medium">{monthLabel}</h2>
         <Button variant="secondary" size="sm" onClick={() => go(1)} aria-label="Next month">
           ›
         </Button>
@@ -130,7 +141,7 @@ export function ContentCalendar({
                           <span key={pl} className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: PLATFORMS[pl].color }} />
                         ))}
                       </span>
-                      {new Date(p.scheduled_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{" "}
+                      {formatDateTime(p.scheduled_at!, { hour: "numeric", minute: "2-digit" }, hydrated, "time")}{" "}
                       {p.content.slice(0, 40) || p.title}
                     </button>
                   ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { Badge, Button, EmptyState, Modal } from "@totalweb/ui";
+import { Badge, Button, EmptyState, LocalTime, Modal } from "@totalweb/ui";
 import {
   GENERATED_FILTERS,
   GENERATED_STATE_LABEL,
@@ -18,7 +18,7 @@ import { draftToComposer } from "./draftComposer";
 import { LiveDevicePreview } from "./LiveDevicePreview";
 import { PostComposerModal, type ComposerInitial } from "./PostComposerModal";
 import { PostStatusModal } from "./PostStatus";
-import { PlatformChip, fmtSeconds, fmtUsd } from "./shared";
+import { PlatformChip, Usd, fmtSeconds } from "./shared";
 
 export interface GeneratedFilters {
   status?: GeneratedFilter | null;
@@ -36,19 +36,17 @@ const STATE_TONE: Record<GeneratedState, "neutral" | "primary" | "success" | "wa
   rejected: "neutral",
 };
 
-const when = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : null;
 
 const withTags = (p: GeneratedPost) =>
   p.content + (p.hashtags.length ? `\n\n${p.hashtags.map((h) => (h.startsWith("#") ? h : `#${h}`)).join(" ")}` : "");
 
-/** The most relevant moment for a post's state, with its label. */
+/** The most relevant moment for a post's state, with its label (an ISO time: render it with LocalTime). */
 function keyTime(p: GeneratedPost): [string, string] | null {
   const published = p.target?.published_at ?? p.post?.published_at;
-  if (p.state === "published" && published) return ["Published", when(published)!];
-  if ((p.state === "scheduled" || p.state === "publishing") && p.post?.scheduled_at) return ["Scheduled", when(p.post.scheduled_at)!];
-  if ((p.state === "review" || p.state === "draft") && p.suggested_at) return ["Suggested", when(p.suggested_at)!];
-  return ["Generated", when(p.created_at)!];
+  if (p.state === "published" && published) return ["Published", published];
+  if ((p.state === "scheduled" || p.state === "publishing") && p.post?.scheduled_at) return ["Scheduled", p.post.scheduled_at];
+  if ((p.state === "review" || p.state === "draft") && p.suggested_at) return ["Suggested", p.suggested_at];
+  return ["Generated", p.created_at];
 }
 
 /**
@@ -288,7 +286,7 @@ export function GeneratedPostsGallery({
                   {time && (
                     <p className="text-xs">
                       <span className="text-muted">{time[0]} </span>
-                      {time[1]}
+                      <LocalTime value={time[1]} />
                     </p>
                   )}
                   {p.video_project && p.video_project.status !== "done" && (
@@ -299,7 +297,9 @@ export function GeneratedPostsGallery({
                   {p.cost.video_usd != null && (
                     <p className="text-xs" title="OpenAI cost of making this video, start to end">
                       <span className="text-muted">Video cost </span>
-                      <span className="tabular-nums">{fmtUsd(p.cost.video_usd)}</span>
+                      <span className="tabular-nums">
+                        <Usd n={p.cost.video_usd} />
+                      </span>
                       {p.cost.video_seconds != null && <span className="text-muted"> · {fmtSeconds(p.cost.video_seconds)}</span>}
                     </p>
                   )}
@@ -476,7 +476,9 @@ function PostDetail({
             {time && (
               <>
                 <dt className="text-muted">{time[0]}</dt>
-                <dd>{time[1]}</dd>
+                <dd>
+                  <LocalTime value={time[1]} />
+                </dd>
               </>
             )}
             {post.idea?.topic && (
@@ -495,7 +497,7 @@ function PostDetail({
               <>
                 <dt className="text-muted">Video cost</dt>
                 <dd className="tabular-nums">
-                  {fmtUsd(post.cost.video_usd)}
+                  <Usd n={post.cost.video_usd} />
                   {post.cost.video_seconds != null && <span className="text-muted"> · made in {fmtSeconds(post.cost.video_seconds)}</span>}
                 </dd>
               </>
@@ -504,7 +506,7 @@ function PostDetail({
               <>
                 <dt className="text-muted">Whole batch</dt>
                 <dd className="tabular-nums" title="Research, planning, copy and every video in the generation this post came from">
-                  {fmtUsd(post.cost.job_usd)}
+                  <Usd n={post.cost.job_usd} />
                 </dd>
               </>
             )}

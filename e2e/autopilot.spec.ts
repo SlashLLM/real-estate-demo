@@ -6,6 +6,8 @@ import { admin, readSeed } from "./support/db";
 // recommends without review: articles live/scheduled across the interval, posts scheduled, and a video whose recommended
 // concept is approved with the voice's narrator before it is posted.
 test.describe.configure({ mode: "serial" });
+// Not the server's timezone, so server- and browser-formatted times differ (they must not break hydration).
+test.use({ timezoneId: "America/Los_Angeles" });
 
 const run = Date.now().toString(36);
 const voice = {
@@ -231,5 +233,26 @@ test("a run never overlaps: Run now refuses while one is in progress", async ({ 
     await expect(card(page, "Blog articles").getByText("A run is already in progress")).toBeVisible();
   } finally {
     await db.from("autopilot_runs").delete().eq("id", open!.id);
+  }
+});
+
+test("the page hydrates cleanly when the browser's timezone differs from the server's", async ({ page }) => {
+  const problems: string[] = [];
+  page.on("pageerror", (e) => problems.push(e.message));
+  page.on("console", (m) => {
+    if (m.type() === "error" && /hydrat|#418|did not match/i.test(m.text())) problems.push(m.text());
+  });
+  await page.goto("/admin/autopilot");
+  // Runs from the earlier tests render their times (next run, last run, run start, item go-live times).
+  await expect(card(page, "Blog articles").locator("details").first()).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(problems).toEqual([]);
+  // And it shows the viewer's local time (Los Angeles), not the server's.
+  const times = card(page, "Blog articles").locator("time[datetime]");
+  await expect(times.first()).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}T/);
+  for (const t of await times.all()) {
+    const iso = (await t.getAttribute("datetime"))!;
+    const local = await page.evaluate((i) => new Date(i).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }), iso);
+    await expect(t).toContainText(local);
   }
 });

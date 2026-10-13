@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, Input, Label, Select, Textarea } from "@totalweb/ui";
+import { Badge, Button, Card, Input, Label, LocalTime, Select, Textarea } from "@totalweb/ui";
 import { requestArticle } from "../server/actions";
 import type { BlogGenerationJob } from "../types";
-import { fmtDate } from "./shared";
 
 /** Asks ConGenEng for an SEO article. Finished articles land in the review queue, never live. */
 export function GeneratePanel({ jobs, reviewHref }: { jobs: BlogGenerationJob[]; reviewHref: string }) {
@@ -96,7 +95,7 @@ export function GeneratePanel({ jobs, reviewHref }: { jobs: BlogGenerationJob[];
                 <Badge tone={j.status === "failed" ? "danger" : j.status === "succeeded" ? "success" : "warning"}>{j.status}</Badge>
               </div>
               <p className="mt-1 text-xs text-muted">
-                {fmtDate(j.created_at)}
+                <LocalTime value={j.created_at} />
                 {j.stage && j.status !== "succeeded" ? ` · ${j.stage}` : ""}
                 {typeof j.progress === "number" && j.status === "running" ? ` · ${Math.round(j.progress * 100)}%` : ""}
               </p>

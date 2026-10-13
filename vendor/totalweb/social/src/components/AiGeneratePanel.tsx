@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition, type InputHTMLAttributes } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, EmptyState, Input, Label, Select, Textarea } from "@totalweb/ui";
+import { Badge, Button, Card, EmptyState, Input, Label, LocalTime, Select, Textarea } from "@totalweb/ui";
 import { PLATFORMS, PLATFORM_KEYS, POST_TYPES, supportsPostType, type PlatformKey, type PostType } from "../core/platforms.ts";
 import { rejectDraft, requestGeneration, saveBrandProfile } from "../server/actions";
 import type { BrandProfile } from "../server/engine-client";
@@ -10,7 +10,7 @@ import type { Account, Draft, GenerationJob, MediaAsset } from "../types";
 import { draftToComposer } from "./draftComposer";
 import { MediaPicker } from "./MediaPicker";
 import { PostComposerModal, type ComposerInitial } from "./PostComposerModal";
-import { PlatformChip, fmt, fmtSeconds, fmtUsd } from "./shared";
+import { Compact, PlatformChip, Usd, fmtSeconds } from "./shared";
 
 /**
  * Talks to the Content Generation Engine: edit the brand profile, choose how many posts of each type
@@ -277,7 +277,7 @@ export function AiGeneratePanel({
       {/* Only the current job: when nothing is running, the outcome of the latest one */}
       {!running && jobs[0] && jobs[0].status === "failed" && (
         <Card className="text-sm">
-          <Badge tone="danger">failed</Badge> <span className="text-muted">{new Date(jobs[0].created_at).toLocaleString()}</span>
+          <Badge tone="danger">failed</Badge> <LocalTime value={jobs[0].created_at} options={{}} className="text-muted" />
           {jobs[0].error && <p className="mt-1 text-danger">{jobs[0].error}</p>}
         </Card>
       )}
@@ -310,7 +310,11 @@ export function AiGeneratePanel({
                         <Badge>{POST_TYPES.find((t) => t.key === (d.idea?.post_type ?? d.idea?.format))?.label ?? d.idea?.format}</Badge>
                       )}
                     </span>
-                    {d.suggested_at && <span className="text-xs text-muted">Suggested {new Date(d.suggested_at).toLocaleString()}</span>}
+                    {d.suggested_at && (
+                      <span className="text-xs text-muted">
+                        Suggested <LocalTime value={d.suggested_at} options={{}} />
+                      </span>
+                    )}
                   </div>
                   {d.title && <p className="font-medium">{d.title}</p>}
                   <p className="whitespace-pre-wrap text-sm">{d.content}</p>
@@ -395,7 +399,7 @@ function JobProgress({ job }: { job: GenerationJob }) {
           {job.cost_usd != null && (
             <span className="tabular-nums text-fg" title="OpenAI cost so far (voice, music, rendering and research run locally)">
               {" "}
-              · {fmtUsd(job.cost_usd)} so far
+              · <Usd n={job.cost_usd} /> so far
             </span>
           )}
         </span>
@@ -458,7 +462,7 @@ function CostCard({ job }: { job: GenerationJob }) {
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-medium">Cost of the last generation</h2>
         <p className="text-sm">
-          <span className="text-lg font-semibold tabular-nums">{fmtUsd(cost.total_usd)}</span>
+          <span className="text-lg font-semibold tabular-nums"><Usd n={cost.total_usd} /></span>
           <span className="ml-2 text-muted">in {fmtSeconds(cost.seconds)}</span>
         </p>
       </div>
@@ -485,9 +489,11 @@ function CostCard({ job }: { job: GenerationJob }) {
                   )}
                 </td>
                 <td className="py-1.5 text-right tabular-nums text-muted">
-                  {fmt(s.input_tokens)} / {fmt(s.output_tokens)}
+                  <Compact n={s.input_tokens} /> / <Compact n={s.output_tokens} />
                 </td>
-                <td className="py-1.5 text-right tabular-nums">{fmtUsd(s.usd)}</td>
+                <td className="py-1.5 text-right tabular-nums">
+                  <Usd n={s.usd} />
+                </td>
               </tr>
             );
           })}

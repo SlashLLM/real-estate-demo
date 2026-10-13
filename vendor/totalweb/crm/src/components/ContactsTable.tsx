@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Badge, Button, EmptyState, Input, Modal, Select, Table } from "@totalweb/ui";
+import { Badge, Button, EmptyState, Input, LocalTime, Modal, Select, Table } from "@totalweb/ui";
 import { ContactForm } from "./ContactForm";
 import { contactName, LIFECYCLE_STAGES, type Company, type Contact } from "../types";
 
@@ -72,7 +72,9 @@ export function ContactsTable({
                   <Badge tone={c.lifecycle_stage === "customer" ? "success" : "primary"}>{c.lifecycle_stage.toUpperCase()}</Badge>
                 </td>
                 <td className="text-muted">{c.source}</td>
-                <td className="text-muted">{c.last_activity_at ? new Date(c.last_activity_at).toLocaleDateString() : "—"}</td>
+                <td className="text-muted">
+                  <LocalTime value={c.last_activity_at} kind="date" options={{}} />
+                </td>
               </tr>
             ))}
           </tbody>

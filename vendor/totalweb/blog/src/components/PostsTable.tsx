@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Badge, EmptyState, Table } from "@totalweb/ui";
+import { Badge, EmptyState, LocalTime, Table } from "@totalweb/ui";
 import { seoChecklist } from "../core/seo.ts";
 import type { AdminPostRow } from "../server/queries";
-import { PostStatusBadge, fmtDate } from "./shared";
+import { PostStatusBadge } from "./shared";
 
 /** Admin list of posts with status, SEO score and AI origin. Rows open the editor. */
 export function PostsTable({ posts, basePath }: { posts: AdminPostRow[]; basePath: string }) {
@@ -44,7 +44,7 @@ export function PostsTable({ posts, basePath }: { posts: AdminPostRow[]; basePat
                 {passed}/{checks.length}
               </td>
               <td className="text-muted">{p.focus_keyword ?? "—"}</td>
-              <td className="whitespace-nowrap text-muted">{fmtDate(p.status === "scheduled" ? p.published_at : p.updated_at)}</td>
+              <td className="whitespace-nowrap text-muted"><LocalTime value={p.status === "scheduled" ? p.published_at : p.updated_at} /></td>
             </tr>
           );
         })}

@@ -3,13 +3,15 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button, EmptyState, Input } from "@totalweb/ui";
+import { Button, EmptyState, Input, LocalTime, useHydrated } from "@totalweb/ui";
 import { saveTask, setTaskStatus } from "../server/actions";
 import { contactName, type Task } from "../types";
 
 export function TaskRow({ task }: { task: Task }) {
   const [pending, start] = useTransition();
-  const overdue = task.status === "open" && task.due_at && new Date(task.due_at) < new Date();
+  // "Overdue" depends on the viewer's clock: decided after hydration so the first render matches the server's.
+  const hydrated = useHydrated();
+  const overdue = hydrated && task.status === "open" && task.due_at && new Date(task.due_at) < new Date();
   return (
     <label className="flex items-center gap-3 border-b border-border py-2 text-sm last:border-0">
       <input
@@ -23,7 +25,7 @@ export function TaskRow({ task }: { task: Task }) {
         {task.contact && <span className="ml-2 text-muted">· {contactName(task.contact)}</span>}
       </span>
       {task.due_at && (
-        <time className={overdue ? "text-danger" : "text-muted"}>{new Date(task.due_at).toLocaleDateString()}</time>
+        <LocalTime value={task.due_at} kind="date" options={{}} className={overdue ? "text-danger" : "text-muted"} />
       )}
     </label>
   );

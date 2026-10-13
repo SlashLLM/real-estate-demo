@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
-import { Badge, Button, Card, Input, Modal, Select, Textarea } from "@totalweb/ui";
+import { Badge, Button, Card, Input, LocalNumber, LocalTime, Modal, Select, Textarea } from "@totalweb/ui";
 import { ContactForm } from "./ContactForm";
 import { TaskRow } from "./TasksList";
 import { logActivity, saveTask } from "../server/actions";
@@ -65,7 +65,7 @@ export function ContactDetail({
             <div key={d.id} className="flex justify-between py-1 text-sm">
               <span>{d.title}</span>
               <span className="tabular-nums">
-                {Number(d.amount).toLocaleString(undefined, { style: "currency", currency: d.currency })}
+                <LocalNumber value={Number(d.amount)} options={{ style: "currency", currency: d.currency }} />
               </span>
             </div>
           ))}
@@ -133,7 +133,7 @@ export function ContactDetail({
               <div className="flex-1 rounded-ui border border-border bg-surface p-3">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{a.subject ?? a.type}</span>
-                  <time className="text-muted">{new Date(a.occurred_at).toLocaleString()}</time>
+                  <LocalTime value={a.occurred_at} options={{}} className="text-muted" />
                 </div>
                 {a.body && <p className="mt-1 whitespace-pre-wrap text-sm">{a.body}</p>}
               </div>

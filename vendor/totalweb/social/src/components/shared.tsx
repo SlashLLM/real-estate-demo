@@ -1,4 +1,4 @@
-import { Badge } from "@totalweb/ui";
+import { Badge, useHydrated } from "@totalweb/ui";
 import { PLATFORMS, type PlatformKey } from "../core/platforms.ts";
 import type { TargetStatus } from "../types";
 
@@ -29,12 +29,22 @@ export function StatusBadge({ status }: { status: TargetStatus | string }) {
 }
 
 /** "$0.42", "<$0.01", "—". */
-export const fmtUsd = (n: number | null | undefined) =>
-  n == null ? "—" : n > 0 && n < 0.01 ? "<$0.01" : n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+export const fmtUsd = (n: number | null | undefined, hydrated = true) =>
+  n == null ? "—" : n > 0 && n < 0.01 ? "<$0.01" : n.toLocaleString(hydrated ? undefined : "en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+
+/** fmtUsd for client components: en-US until hydrated (matches the server), then the viewer's locale. */
+export function Usd({ n }: { n: number | null | undefined }) {
+  return <>{fmtUsd(n, useHydrated())}</>;
+}
 
 /** "45 s", "3 min 20 s". */
 export const fmtSeconds = (s: number | null | undefined) =>
   s == null ? "—" : s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min${s % 60 >= 1 ? ` ${Math.round(s % 60)} s` : ""}`;
 
-export const fmt = (n: number | null | undefined) =>
-  n == null ? "—" : Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(n);
+export const fmt = (n: number | null | undefined, hydrated = true) =>
+  n == null ? "—" : Intl.NumberFormat(hydrated ? undefined : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+
+/** fmt for client components (see Usd). */
+export function Compact({ n }: { n: number | null | undefined }) {
+  return <>{fmt(n, useHydrated())}</>;
+}

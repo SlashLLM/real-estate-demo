@@ -7,7 +7,7 @@ import { PLATFORMS, PLATFORM_KEYS, VIDEO_FORMATS, VOICE_LABELS, VOICE_MODES, est
 import { approveVideo, deleteVideo, requestVideo, retryVideo, saveDemoLogins } from "../server/actions";
 import type { Account, MediaAsset, VideoProject } from "../types";
 import { PostComposerModal, type ComposerInitial } from "./PostComposerModal";
-import { fmtSeconds, fmtUsd } from "./shared";
+import { Usd, fmtSeconds } from "./shared";
 
 interface DemoLogin {
   id?: string;
@@ -122,7 +122,12 @@ export function VideoStudio({
                   </div>
                   <p className="mt-1 text-xs text-muted">
                     {VIDEO_FORMATS[p.request?.format as VideoFormat]?.label ?? "Video"} · {p.request?.aspect} · {p.request?.length_s} s
-                    {p.cost?.total_usd ? ` · ${fmtUsd(p.cost.total_usd)}` : ""}
+                    {p.cost?.total_usd ? (
+                      <>
+                        {" · "}
+                        <Usd n={p.cost.total_usd} />
+                      </>
+                    ) : null}
                   </p>
                   {p.live && <Progress live={p.live} compact />}
                 </button>
@@ -360,7 +365,12 @@ function Progress({ live, compact }: { live: NonNullable<VideoProject["live"]>; 
           <span>{live.stage ? live.stage.charAt(0).toUpperCase() + live.stage.slice(1) : "Starting…"}</span>
           <span className="tabular-nums text-muted">
             {pct != null && `${pct}%`}
-            {live.cost_usd != null && ` · ${fmtUsd(live.cost_usd)} so far`}
+            {live.cost_usd != null && (
+              <>
+                {" · "}
+                <Usd n={live.cost_usd} /> so far
+              </>
+            )}
           </span>
         </div>
       )}
@@ -439,12 +449,19 @@ function CostLine({ p }: { p: VideoProject }) {
   if (!p.cost?.total_usd && !p.live?.cost_usd) return null;
   return (
     <p className="border-t border-border pt-3 text-xs text-muted">
-      Cost: proposal {fmtUsd(p.cost?.proposal_usd ?? null)}
-      {p.cost?.build_usd != null && ` · film ${fmtUsd(p.cost.build_usd)}`}
+      Cost: proposal <Usd n={p.cost?.proposal_usd ?? null} />
+      {p.cost?.build_usd != null && (
+        <>
+          {" · film "}
+          <Usd n={p.cost.build_usd} />
+        </>
+      )}
       {p.cost?.total_usd ? (
         <>
           {" "}
-          · <span className="font-medium text-fg">total {fmtUsd(p.cost.total_usd)}</span>
+          · <span className="font-medium text-fg">
+            total <Usd n={p.cost.total_usd} />
+          </span>
         </>
       ) : null}
       {p.result?.seconds != null && ` · built in ${fmtSeconds(p.result.seconds)}`} · OpenAI usage; capture, voice, music and rendering run on your server.

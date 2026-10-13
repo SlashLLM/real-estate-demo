@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { Button, EmptyState, Table } from "@totalweb/ui";
+import { Button, EmptyState, LocalTime, Table } from "@totalweb/ui";
 import { deletePost, retryPost } from "../server/actions";
 import type { Post } from "../types";
 import { PlatformChip, StatusBadge } from "./shared";
@@ -23,7 +23,9 @@ export function PostHistory({ posts }: { posts: Post[] }) {
       <tbody>
         {posts.map((p) => (
           <tr key={p.id}>
-            <td className="whitespace-nowrap text-muted">{p.scheduled_at ? new Date(p.scheduled_at).toLocaleString() : "—"}</td>
+            <td className="whitespace-nowrap text-muted">
+              <LocalTime value={p.scheduled_at} options={{}} />
+            </td>
             <td className="max-w-md">
               <p className="line-clamp-2">{p.content || p.title}</p>
               {p.source === "ai" && <span className="text-xs text-primary">AI generated</span>}
