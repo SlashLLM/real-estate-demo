@@ -125,11 +125,12 @@ function ScheduleCard({
       }
     });
 
+  const title = kind === "blog" ? "Blog articles" : "Social posts";
   return (
-    <Card>
+    <Card role="region" aria-label={title}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">{kind === "blog" ? "Blog articles" : "Social posts"}</h2>
+          <h2 className="text-lg font-semibold">{title}</h2>
           <p className="text-sm text-muted">
             {kind === "blog"
               ? "The AI picks the next article the site should rank for, writes it and publishes it, spread over the interval."
@@ -137,7 +138,7 @@ function ScheduleCard({
           </p>
         </div>
         <label className="flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+          <input type="checkbox" aria-label={`${title} autopilot on`} checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
           {enabled ? "On" : "Off"}
         </label>
       </div>

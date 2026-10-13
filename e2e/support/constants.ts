@@ -9,6 +9,8 @@ export const ENGINE_URL = `http://127.0.0.1:${ENGINE_PORT}`;
 
 /** HMAC secret shared by the app and the stub engine for this run only. */
 export const ENGINE_SECRET = "e2e-stub-engine-secret";
+/** x-cron-secret for the autopilot tick route during the run. */
+export const CRON_SECRET = "e2e-cron-secret";
 /** AES key for encrypted tokens / demo-login passwords written during the run (test data only). */
 export const TOKEN_ENC_KEY = Buffer.alloc(32, 7).toString("base64");
 

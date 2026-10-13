@@ -5,6 +5,8 @@
 //   POST /v1/competitors/discover   → { competitors }
 //   POST /v1/video/proposal         → { job_id }, then a signed callback with three concepts
 //   POST /v1/video/build            → { job_id }, then a signed callback with the film (served from /media)
+//   POST /v1/blog/generate          → { job_id }, then a signed callback with an SEO-ready article (no topic given:
+//                                     the stub "recommends" one, avoiding avoid_topics like the engine)
 //   GET  /v1/jobs/:id               → still running (callbacks are the delivery path)
 //   GET  /media/:file               → files from public/images/doodle (imported by the app as generated media)
 //   GET  /__requests                → every signed request received, for assertions
@@ -67,7 +69,14 @@ function generationResult(req, jobId) {
           hashtags: ["SGProperty", "HDB"],
           suggested_time: inDays(2 + i),
           rationale: "Valuation posts outperform listing posts in this niche (stub engine).",
-          idea: { post_type: row.type, title: `E2E ${row.type} idea ${i}`, topic: "HDB valuations", hook: "Your flat is worth more than you think" },
+          idea: {
+            post_type: row.type,
+            title: `E2E ${row.type} idea ${i}`,
+            topic: "HDB valuations",
+            hook: "Your flat is worth more than you think",
+            // Two-step video: the director makes the film after a proposal, as the engine does with video_two_step.
+            ...(row.type === "video" ? { video_status: "needs_proposal", video_brief: { hook: "Your flat is worth more than you think", key_points: ["instant valuation"], call_to_action: "Get your valuation" } } : {}),
+          },
           media: row.type === "image" ? [{ url: `${SELF}/media/house-still.webp`, mime: "image/webp", kind: "image" }] : [],
         });
       }
@@ -161,6 +170,45 @@ function buildResult(req, jobId) {
   };
 }
 
+let articles = 0;
+const filler = (n) => Array.from({ length: n }, (_, i) => ["valuation", "resale", "lease", "flat", "price", "market"][i % 6]).join(" ");
+
+function blogResult(req, jobId) {
+  const n = ++articles;
+  // No topic: recommend one the site doesn't have yet (the engine researches demand; the stub just counts).
+  const topic = req.topic ?? `E2E recommended topic ${n}: HDB resale valuation guide`;
+  const keyword = req.focus_keyword ?? `hdb valuation guide ${n}`;
+  return {
+    kind: "blog_article",
+    job_ref: req.job_ref,
+    job_id: jobId,
+    status: "succeeded",
+    insights: { search_intent: "informational", topic_why: "Stub: asked often" },
+    article: {
+      topic,
+      title: `E2E article ${n}: ${keyword}`,
+      slug: `e2e-article-${n}-${Date.now().toString(36)}`,
+      excerpt: `What decides an HDB flat's resale value in Singapore, and how to check yours in minutes (${keyword}).`,
+      body_md: `An ${keyword} starts with the numbers. ${filler(160)}
+
+## What drives the price
+${filler(120)}
+
+## How to check yours
+See [our valuation tool](/valuation). ${filler(120)}`,
+      seo_title: `E2E ${keyword}: a quick guide`,
+      meta_description: `The ${keyword}: what drives HDB resale prices in Singapore and how to check your flat's value in minutes.`,
+      focus_keyword: keyword,
+      secondary_keywords: ["hdb resale price"],
+      faq: [{ q: "How is an HDB flat valued?", a: "By recent transactions nearby, the remaining lease and the flat's condition." }],
+      sources: [],
+      tags: ["hdb", "valuation"],
+      category: "Guides",
+      notes: "Stub article.",
+    },
+  };
+}
+
 const json = (res, status, data) => {
   res.writeHead(status, { "Content-Type": "application/json" });
   res.end(JSON.stringify(data));
@@ -206,6 +254,9 @@ createServer(async (req, res) => {
     case "/v1/video/proposal":
       json(res, 200, { job_id: jobId });
       return void callback(payload.callback_url, proposalResult(payload, jobId));
+    case "/v1/blog/generate":
+      json(res, 200, { job_id: jobId });
+      return void callback(payload.callback_url, blogResult(payload, jobId));
     case "/v1/video/build":
       json(res, 200, { job_id: jobId });
       return void callback(payload.callback_url, buildResult(payload, jobId));

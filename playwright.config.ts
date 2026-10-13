@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { APP_PORT, APP_URL, ENGINE_PORT, ENGINE_SECRET, ENGINE_URL, STORAGE_STATE, TOKEN_ENC_KEY } from "./e2e/support/constants";
+import { APP_PORT, APP_URL, CRON_SECRET, ENGINE_PORT, ENGINE_SECRET, ENGINE_URL, STORAGE_STATE, TOKEN_ENC_KEY } from "./e2e/support/constants";
 
 /**
  * Admin e2e suite. `pnpm test:e2e` starts a stub content engine and its own `next dev` on port 3100 (env overrides
@@ -59,6 +59,9 @@ export default defineConfig({
         CONGEN_SHARED_SECRET: ENGINE_SECRET,
         TOKEN_ENC_KEY,
         NEXT_PUBLIC_SITE_URL: APP_URL,
+        CRON_SECRET,
+        // The autopilot tick only runs this site's workspace when this is set; the suite's workspace is created per run.
+        TOTALWEB_WORKSPACE_ID: "",
       },
     },
   ],
