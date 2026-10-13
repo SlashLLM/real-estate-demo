@@ -181,8 +181,10 @@ async function advanceBlog(run: AutopilotRun, out: TickSummary): Promise<RunItem
   const jobIds = items.filter((i) => i.kind === "blog_job" && i.state === "pending").map((i) => i.ref);
   if (jobIds.length) {
     const { data: jobs } = await db.from("blog_generation_jobs").select("*").in("id", jobIds);
-    const synced = await withBlogProgress((jobs ?? []) as any[]);
-    const byId = new Map(synced.map((j) => [j.id, j]));
+    await withBlogProgress((jobs ?? []) as any[]); // applies finished results whose callback was missed
+    // Our rows after the sync (see advanceSocial): only a stored result counts.
+    const { data: stored } = await db.from("blog_generation_jobs").select("id, status, error").in("id", jobIds);
+    const byId = new Map((stored ?? []).map((j) => [j.id, j]));
     for (const item of items) {
       const job = byId.get(item.ref);
       if (!job || item.state !== "pending") continue;
@@ -224,10 +226,13 @@ async function advanceSocial(run: AutopilotRun): Promise<RunItem[]> {
   // The generation job → one item per draft it produced.
   for (const item of items.filter((i) => i.kind === "social_job" && i.state === "pending")) {
     const { data: job } = await db.from("social_generation_jobs").select("*").eq("id", item.ref).single();
-    const [synced] = job ? await withEngineProgress([job as any]) : [];
-    if (!synced) Object.assign(item, { state: "failed", error: "Generation job missing" });
-    else if (synced.status === "failed") Object.assign(item, { state: "failed", error: (synced as any).error ?? "The engine failed" });
-    else if (synced.status === "succeeded") {
+    if (job) await withEngineProgress([job as any]); // applies a finished result whose callback was missed
+    // Our row, not the engine's status: the engine can be done while storing its results here failed (e.g. the
+    // generated media couldn't be downloaded). The job then stays running and is retried on the next tick.
+    const { data: stored } = await db.from("social_generation_jobs").select("status, error").eq("id", item.ref).maybeSingle();
+    if (!stored) Object.assign(item, { state: "failed", error: "Generation job missing" });
+    else if (stored.status === "failed") Object.assign(item, { state: "failed", error: stored.error ?? "The engine failed" });
+    else if (stored.status === "succeeded") {
       const { data: drafts } = await db.from("social_generated_drafts").select("id, platform, idea").eq("job_id", item.ref).order("created_at");
       if (!drafts) continue; // results still being stored
       for (const d of drafts) items.push({ kind: "draft", ref: d.id, state: "pending", label: d.idea?.title ?? d.platform });

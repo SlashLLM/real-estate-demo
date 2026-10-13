@@ -218,6 +218,68 @@ test("social autopilot schedules the recommended posts and builds the video with
   await expect(runs.first()).toContainText("2 published");
 });
 
+test("a finished engine job the site can't store yet keeps the run open (retried) instead of failing it", async ({ request }) => {
+  const { workspaceId } = readSeed();
+  const db = admin();
+  const { data: s } = await db.from("autopilot_schedules").select("id, config").eq("workspace_id", workspaceId).eq("kind", "social").single();
+  const config = { ...s!.config, counts: { text: 0, image: 1, video: 0 }, goals: "E2E unreachable media" };
+  await db.from("autopilot_schedules").update({ config, enabled: true, next_run_at: new Date().toISOString() }).eq("id", s!.id);
+  try {
+    // The engine reports the job done, but its image link can't be downloaded, so the drafts can't be stored.
+    for (let i = 0; i < 4; i++) {
+      await tick(request);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    const { data: run } = await db.from("autopilot_runs").select("*").eq("schedule_id", s!.id).order("started_at", { ascending: false }).limit(1).single();
+    expect(run.status).toBe("running");
+    expect(run.items).toEqual([expect.objectContaining({ kind: "social_job", state: "pending" })]);
+    const { data: job } = await db.from("social_generation_jobs").select("status").eq("id", run.items[0].ref).single();
+    expect(job!.status).toBe("running");
+    const { data: sched } = await db.from("autopilot_schedules").select("consecutive_failures").eq("id", s!.id).single();
+    expect(sched!.consecutive_failures).toBe(0);
+    await db.from("autopilot_runs").delete().eq("id", run.id);
+  } finally {
+    await db.from("autopilot_schedules").update({ config: s!.config, enabled: false }).eq("id", s!.id);
+  }
+});
+
+test("a failed run can be removed from the list; other runs can't", async ({ page }) => {
+  const { workspaceId } = readSeed();
+  const db = admin();
+  const { data: s } = await db.from("autopilot_schedules").select("id").eq("workspace_id", workspaceId).eq("kind", "blog").single();
+  const run = (status: string, error: string) => ({
+    workspace_id: workspaceId,
+    schedule_id: s!.id,
+    kind: "blog",
+    status,
+    ends_at: new Date(Date.now() + 864e5).toISOString(),
+    config: { articlesPerRun: 1 },
+    items: [{ kind: "blog_job", ref: crypto.randomUUID(), state: status === "failed" ? "failed" : "pending", error }],
+  });
+  const { data: rows } = await db
+    .from("autopilot_runs")
+    .insert([run("failed", "E2E seeded failure: engine rejected the request"), run("running", "")])
+    .select("id, status");
+  const failed = rows!.find((r) => r.status === "failed")!;
+  const running = rows!.find((r) => r.status === "running")!;
+  try {
+    await page.goto("/admin/autopilot");
+    const runs = card(page, "Blog articles").locator("details");
+    const failedRow = runs.filter({ hasText: "E2E seeded failure" });
+    await expect(failedRow).toHaveCount(1);
+    // Only failed runs offer it: the finished run from the earlier test and the one in progress don't.
+    await expect(card(page, "Blog articles").getByRole("button", { name: "Remove this failed run" })).toHaveCount(1);
+
+    await failedRow.getByRole("button", { name: "Remove this failed run" }).click();
+    await expect(failedRow).toHaveCount(0);
+    await expect(runs.filter({ hasText: "done" }).first()).toBeVisible(); // the rest of the history stays
+    const { data: left } = await db.from("autopilot_runs").select("id").in("id", [failed.id, running.id]);
+    expect(left!.map((r) => r.id)).toEqual([running.id]);
+  } finally {
+    await db.from("autopilot_runs").delete().in("id", [failed.id, running.id]);
+  }
+});
+
 test("a run never overlaps: Run now refuses while one is in progress", async ({ page }) => {
   const { workspaceId } = readSeed();
   const db = admin();

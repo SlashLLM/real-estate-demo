@@ -7,7 +7,9 @@
 //   POST /v1/video/build            → { job_id }, then a signed callback with the film (served from /media)
 //   POST /v1/blog/generate          → { job_id }, then a signed callback with an SEO-ready article (no topic given:
 //                                     the stub "recommends" one, avoiding avoid_topics like the engine)
-//   GET  /v1/jobs/:id               → still running (callbacks are the delivery path)
+//   GET  /v1/jobs/:id               → still running (callbacks are the delivery path), except jobs asked with goals
+//                                     containing "E2E unreachable media": finished, with image links the app can't
+//                                     download (like an engine whose PUBLIC_URL isn't reachable from the site)
 //   GET  /media/:file               → files from public/images/doodle (imported by the app as generated media)
 //   GET  /__requests                → every signed request received, for assertions
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -22,6 +24,9 @@ const MEDIA_DIR = join(process.cwd(), "public", "images", "doodle");
 
 const received = [];
 let seq = 0;
+/** Finished results served from /v1/jobs/:id (only for the unreachable-media scenario). */
+const finished = new Map();
+const UNREACHABLE = "E2E unreachable media";
 
 const sign = (ts, body) => createHmac("sha256", SECRET).update(`${ts}.${body}`).digest("hex");
 
@@ -77,7 +82,10 @@ function generationResult(req, jobId) {
             // Two-step video: the director makes the film after a proposal, as the engine does with video_two_step.
             ...(row.type === "video" ? { video_status: "needs_proposal", video_brief: { hook: "Your flat is worth more than you think", key_points: ["instant valuation"], call_to_action: "Get your valuation" } } : {}),
           },
-          media: row.type === "image" ? [{ url: `${SELF}/media/house-still.webp`, mime: "image/webp", kind: "image" }] : [],
+          media:
+            row.type === "image"
+              ? [{ url: req.goals?.includes(UNREACHABLE) ? "http://127.0.0.1:9/media/house-still.webp" : `${SELF}/media/house-still.webp`, mime: "image/webp", kind: "image" }]
+              : [],
         });
       }
     }
@@ -236,15 +244,20 @@ createServer(async (req, res) => {
   received.push({ method: req.method, path: url.pathname, payload });
 
   if (req.method === "GET" && url.pathname.startsWith("/v1/jobs/")) {
+    const done = finished.get(url.pathname.split("/").pop());
+    if (done) return json(res, 200, { status: "succeeded", stage: "done", progress: 1, error: null, result: done, cost_usd: 0.01 });
     return json(res, 200, { status: "running", stage: "research", progress: 0.5, error: null, result: null, cost_usd: 0.01 });
   }
   if (req.method !== "POST") return json(res, 404, { error: "not found" });
 
   const jobId = `stub-${++seq}`;
   switch (url.pathname) {
-    case "/v1/generate":
+    case "/v1/generate": {
       json(res, 200, { job_id: jobId });
-      return void callback(payload.callback_url, generationResult(payload, jobId));
+      const result = generationResult(payload, jobId);
+      if (payload.goals?.includes(UNREACHABLE)) finished.set(jobId, { kind: "posts", ...result });
+      return void callback(payload.callback_url, result);
+    }
     case "/v1/competitors/discover":
       return json(res, 200, {
         competitors: [

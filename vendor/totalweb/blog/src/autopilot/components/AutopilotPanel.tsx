@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Input, Label, LocalTime, Select, Textarea, useHydrated } from "@totalweb/ui";
 import { PLATFORMS, supportsPostType } from "@totalweb/social/core";
 import type { Account, VoiceProfile } from "@totalweb/social";
-import { refreshRuns, runNow, saveSchedule } from "../actions";
+import { refreshRuns, removeFailedRun, runNow, saveSchedule } from "../actions";
 import { INTERVAL_PRESETS, LIMITS, type AutopilotKind, type AutopilotRun, type AutopilotSchedule, type RunItem } from "../plan";
 
 /** A time in the viewer's timezone (hydration-safe: see LocalTime). `relative` prefixes "goes out"/"out". */
@@ -319,6 +319,7 @@ function RunsTable({ runs }: { runs: AutopilotRun[] }) {
               <Badge tone={RUN_TONE[r.status]}>{r.status}</Badge>
               <When iso={r.started_at} />
               <span className="text-muted">· {summary(r.items)}</span>
+              {r.status === "failed" && <RemoveRun id={r.id} />}
             </summary>
             {r.error && <p className="mt-2 text-danger">{r.error}</p>}
             <ul className="mt-2 grid gap-1">
@@ -341,6 +342,38 @@ function RunsTable({ runs }: { runs: AutopilotRun[] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Removes a failed run from the list (its schedule and anything else are untouched). */
+function RemoveRun({ id }: { id: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <span className="ml-auto flex items-center gap-2">
+      {error && <span className="text-xs text-danger">{error}</span>}
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-label="Remove this failed run"
+        disabled={pending}
+        onClick={(e) => {
+          e.preventDefault(); // inside <summary>: don't toggle the details
+          start(async () => {
+            setError(null);
+            try {
+              await removeFailedRun(id);
+              router.refresh();
+            } catch (err) {
+              setError((err as Error).message);
+            }
+          });
+        }}
+      >
+        {pending ? "Removing…" : "Remove"}
+      </Button>
+    </span>
   );
 }
 

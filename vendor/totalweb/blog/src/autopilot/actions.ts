@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createAdminClient } from "@totalweb/supabase/admin";
 import { createClient } from "@totalweb/supabase/server";
 import { requireWorkspace } from "@totalweb/supabase/workspace";
 import { revalidatePublished } from "./handlers";
@@ -69,5 +70,22 @@ export async function refreshRuns() {
   await ctx();
   const summary = await runAutopilotTick();
   revalidatePublished(summary);
+  revalidatePath(AUTOPILOT_BASE, "layout");
+}
+
+/** Removes a failed run from the history (owners/admins). Runs in progress, or that published anything, stay. */
+export async function removeFailedRun(runId: string) {
+  const workspace = await requireWorkspace();
+  if (workspace.role !== "owner" && workspace.role !== "admin") throw new Error("Only owners and admins can remove runs");
+  // Runs are written only by the tick (service role); members can read them, so the delete goes through it too.
+  const { data, error } = await createAdminClient()
+    .from("autopilot_runs")
+    .delete()
+    .eq("id", runId)
+    .eq("workspace_id", workspace.id)
+    .eq("status", "failed")
+    .select("id");
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("Only failed runs can be removed");
   revalidatePath(AUTOPILOT_BASE, "layout");
 }
