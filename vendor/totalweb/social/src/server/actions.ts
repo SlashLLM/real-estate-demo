@@ -5,10 +5,12 @@ import { z } from "zod";
 import { createAdminClient } from "@totalweb/supabase/admin";
 import { createClient, requireUser } from "@totalweb/supabase/server";
 import { requireWorkspace } from "@totalweb/supabase/workspace";
-import { PLATFORM_KEYS, runPublishTick, validateForPlatform, type PlatformKey } from "../core/index.ts";
+import { PLATFORM_KEYS, runPublishTick, type PlatformKey } from "../core/index.ts";
 import type { Post } from "../types";
 import { discoverCompetitors as engineDiscover, requestGeneration as engineGenerate, type BrandProfile } from "./engine-client";
 import { encKey, env, UI_BASE } from "./env";
+import { upsertPost, type SavePostInput } from "./posts";
+import { listVoiceProfiles } from "./voices";
 import {
   approveVideoProject,
   retryVideoProject,
@@ -33,95 +35,12 @@ const platformEnum = z.enum(PLATFORM_KEYS as [PlatformKey, ...PlatformKey[]]);
 // ---------------------------------------------------------------------------
 // Posts
 // ---------------------------------------------------------------------------
-const postSchema = z.object({
-  id: z.string().uuid().optional(),
-  content: z.string().default(""),
-  title: z.string().nullish(),
-  link: z.string().url().nullish().or(z.literal("")),
-  mediaIds: z.array(z.string().uuid()).default([]),
-  tags: z.array(z.string()).default([]),
-  topic: z.string().nullish(),
-  format: z.string().nullish(),
-  /** ISO timestamp; omitted = save as draft, "now" = due immediately (follow with publishNow to send it right away) */
-  scheduledAt: z.string().nullish(),
-  draft: z.boolean().default(false),
-  draftId: z.string().uuid().nullish(),
-  targets: z
-    .array(
-      z.object({
-        accountId: z.string().uuid(),
-        platform: platformEnum,
-        contentOverride: z.string().nullish(),
-        options: z.record(z.string(), z.unknown()).default({}),
-      }),
-    )
-    .min(1, "Pick at least one account"),
-});
-export type SavePostInput = z.input<typeof postSchema>;
+export type { SavePostInput } from "./posts";
 
 export async function savePost(input: SavePostInput) {
   const { supabase, ws } = await ctx();
   const user = await requireUser();
-  const p = postSchema.parse(input);
-
-  // Validate against each platform's rules using the media kinds of the attached assets.
-  const media = p.mediaIds.length
-    ? check(await supabase.from("social_media_assets").select("id, kind").in("id", p.mediaIds))
-    : [];
-  const issues = p.targets.flatMap((t) =>
-    validateForPlatform(t.platform, { text: t.contentOverride ?? p.content, title: p.title, media: media as { kind: "image" | "video" }[] }),
-  );
-  if (issues.length && !p.draft) throw new Error(issues.map((i) => `${i.platform}: ${i.message}`).join("\n"));
-
-  const scheduledAt = p.draft ? null : p.scheduledAt === "now" || !p.scheduledAt ? new Date().toISOString() : p.scheduledAt;
-  const values = {
-    workspace_id: ws,
-    content: p.content,
-    title: p.title ?? null,
-    link: p.link || null,
-    media_ids: p.mediaIds,
-    tags: p.tags,
-    topic: p.topic ?? null,
-    format: p.format ?? (media.some((m: any) => m.kind === "video") ? "video" : media.length > 1 ? "carousel" : media.length ? "image" : "text"),
-    status: p.draft ? "draft" : "scheduled",
-    scheduled_at: scheduledAt,
-    source: p.draftId ? "ai" : "manual",
-    draft_id: p.draftId ?? null,
-  };
-
-  const post = p.id
-    ? check(await supabase.from("social_posts").update(values).eq("id", p.id).select().single())
-    : check(await supabase.from("social_posts").insert({ ...values, created_by: user.id }).select().single());
-
-  // Replace targets that haven't gone out yet; never touch published/in-flight ones.
-  let locked = new Set<string>();
-  if (p.id) {
-    check(await supabase.from("social_post_targets").delete().eq("post_id", p.id).in("status", ["pending", "failed", "cancelled"]));
-    const remaining = check(await supabase.from("social_post_targets").select("account_id").eq("post_id", p.id));
-    locked = new Set((remaining as { account_id: string }[]).map((r) => r.account_id));
-  }
-  const fresh = p.targets.filter((t) => !locked.has(t.accountId));
-  if (fresh.length) check(
-    await supabase.from("social_post_targets").insert(
-      fresh.map((t) => ({
-        workspace_id: ws,
-        post_id: post.id,
-        account_id: t.accountId,
-        platform: t.platform,
-        content_override: t.contentOverride ?? null,
-        options: t.options,
-        status: p.draft ? "cancelled" : "pending",
-        scheduled_at: scheduledAt,
-        attempts: 0,
-        next_attempt_at: null,
-        error: null,
-      })),
-    ),
-  );
-
-  if (p.draftId) {
-    await supabase.from("social_generated_drafts").update({ status: "approved", post_id: post.id }).eq("id", p.draftId);
-  }
+  const post = await upsertPost(supabase, ws, user.id, input);
   revalidatePath(UI_BASE, "layout");
   return post;
 }
@@ -212,6 +131,50 @@ export async function saveBrandProfile(input: BrandProfile) {
   const brand = brandSchema.parse(input);
   const current = check(await supabase.from("workspaces").select("settings").eq("id", ws).single());
   check(await supabase.from("workspaces").update({ settings: { ...(current.settings ?? {}), brand } }).eq("id", ws));
+  revalidatePath(UI_BASE, "layout");
+}
+
+// ---------------------------------------------------------------------------
+// Voice profiles (writing voice + narrator voice; RLS: owners/admins write)
+// ---------------------------------------------------------------------------
+const voiceSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(1).max(60),
+  description: z.string().trim().min(10, "Describe the voice in a sentence or two").max(2000),
+  examples: z.array(z.string().trim().max(500)).max(10).default([]),
+  narrator_voice: z.string().min(2).max(40).default("af_heart"),
+});
+
+export async function listVoices() {
+  const { ws } = await ctx();
+  return listVoiceProfiles(ws);
+}
+
+export async function saveVoiceProfile(input: z.input<typeof voiceSchema>) {
+  const { supabase, ws } = await ctx();
+  const { id, ...v } = voiceSchema.parse(input);
+  const values = { ...v, examples: v.examples.filter(Boolean) };
+  const saved = id
+    ? check(await supabase.from("voice_profiles").update(values).eq("id", id).eq("workspace_id", ws).select().single())
+    : check(await supabase.from("voice_profiles").insert({ ...values, workspace_id: ws }).select().single());
+  // The first profile becomes the default.
+  const { count } = await supabase.from("voice_profiles").select("id", { count: "exact", head: true }).eq("workspace_id", ws).eq("is_default", true);
+  if (!count) await setDefaultVoice((saved as { id: string }).id);
+  revalidatePath(UI_BASE, "layout");
+  return saved;
+}
+
+export async function setDefaultVoice(id: string) {
+  const { supabase, ws } = await ctx();
+  // Clear first: the partial unique index allows only one default per workspace.
+  check(await supabase.from("voice_profiles").update({ is_default: false }).eq("workspace_id", ws).eq("is_default", true));
+  check(await supabase.from("voice_profiles").update({ is_default: true }).eq("workspace_id", ws).eq("id", id));
+  revalidatePath(UI_BASE, "layout");
+}
+
+export async function deleteVoiceProfile(id: string) {
+  const { supabase, ws } = await ctx();
+  check(await supabase.from("voice_profiles").delete().eq("workspace_id", ws).eq("id", id));
   revalidatePath(UI_BASE, "layout");
 }
 

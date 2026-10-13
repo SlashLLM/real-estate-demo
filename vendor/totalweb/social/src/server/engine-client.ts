@@ -6,6 +6,7 @@ import { hmacHex, safeEqual, supportsPostType, type PlatformKey, type PostType }
 import { API_BASE, siteUrl } from "./env";
 import { storeMedia } from "./media";
 import { resolveBrand } from "./brand";
+import { voiceFor } from "./voices";
 
 const MEDIA_URL_TTL_S = 24 * 60 * 60;
 const MAX_CLOCK_SKEW_S = 300;
@@ -38,6 +39,10 @@ export interface GenerationOptions {
   /** media assets the user attached to this request (used as footage/brand assets) */
   mediaIds?: string[];
   historyDays?: number;
+  /** Writing voice; omitted = the workspace's default voice profile. */
+  voiceProfileId?: string | null;
+  /** Set when an autopilot run made this request (stored on the job, so the run can find its drafts). */
+  autopilot?: { scheduleId: string; runId: string };
 }
 
 export function engineConfig() {
@@ -139,7 +144,7 @@ export async function requestGeneration(workspaceId: string, userId: string | nu
   const db = createAdminClient();
 
   const { data: ws } = await db.from("workspaces").select("name, settings").eq("id", workspaceId).single();
-  const brand = resolveBrand(ws?.name, ws?.settings?.brand);
+  const brand = resolveBrand(ws?.name, ws?.settings?.brand, await voiceFor(workspaceId, opts.voiceProfileId));
   if (!brand.niche) throw new Error("Set the brand profile (at least the niche) before generating content");
 
   const { data: competitors = [] } = await db

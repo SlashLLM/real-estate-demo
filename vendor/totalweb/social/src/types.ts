@@ -136,3 +136,16 @@ export interface VideoProject {
   /** Live from the engine while proposing/building. */
   live?: { stage: string | null; progress: number | null; cost_usd: number | null } | null;
 }
+
+/** How the brand writes, and the narrator voice its videos use. One per workspace is the default. */
+export interface VoiceProfile {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description: string;
+  examples: string[];
+  narrator_voice: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}

@@ -5,3 +5,7 @@ export { requestGeneration, discoverCompetitors, buildHistory, handleEngineCallb
 export { resolveBrand } from "./brand";
 export { siteUrl } from "./env";
 export type { BrandProfile, GenerationOptions } from "./engine-client";
+export { withEngineProgress } from "./engine-client";
+export { upsertPost, type SavePostInput } from "./posts";
+export { voiceFor, voiceText, listVoiceProfiles } from "./voices";
+export { approveVideoProject, retryVideoProject, syncVideoProjects } from "./video";

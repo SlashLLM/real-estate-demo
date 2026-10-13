@@ -7,6 +7,7 @@ import { decryptTokens, encryptTokens, formatForSpec, VIDEO_FORMATS, type VoiceM
 export { VIDEO_FORMATS, type VideoFormat };
 import { API_BASE, encKey, siteUrl } from "./env";
 import { resolveBrand } from "./brand";
+import { voiceFor } from "./voices";
 import { engineConfig, signedHeaders, storeEngineMedia } from "./engine-client";
 
 export interface DemoAccountInput {
@@ -95,7 +96,7 @@ async function post(path: string, payload: unknown) {
 
 async function brandFor(workspaceId: string) {
   const { name, settings } = await workspaceSettings(workspaceId);
-  const brand = resolveBrand(name, settings.brand);
+  const brand = resolveBrand(name, settings.brand, await voiceFor(workspaceId));
   // No website in the profile: the film is about the site this module runs on.
   if (!brand.website) brand.website = siteUrl();
   return brand;
@@ -290,4 +291,24 @@ export async function listVideoProjects(workspaceId: string) {
       return out;
     }),
   );
+}
+
+/** Applies finished-but-undelivered engine results to these projects (callbacks can be missed) and returns them fresh. */
+export async function syncVideoProjects(ids: string[]) {
+  if (!ids.length) return [];
+  const { fetchEngineJob } = await import("./engine-client");
+  const db = createAdminClient();
+  const { data } = await db.from("social_video_projects").select("*").in("id", ids);
+  for (const p of (data ?? []) as any[]) {
+    const jobId = p.status === "proposing" ? p.proposal_job_id : p.status === "building" ? p.build_job_id : null;
+    if (!jobId) continue;
+    try {
+      const live = await fetchEngineJob(jobId);
+      if ((live.status === "succeeded" || live.status === "failed") && live.result) await applyVideoResult(live.result);
+    } catch {
+      // engine unreachable: try again next time
+    }
+  }
+  const { data: fresh } = await db.from("social_video_projects").select("*").in("id", ids);
+  return (fresh ?? []) as any[];
 }

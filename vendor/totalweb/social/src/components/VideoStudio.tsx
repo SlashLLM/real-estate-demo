@@ -40,6 +40,7 @@ export function VideoStudio({
   hasWebsite,
   initialProjectId,
   apiBase,
+  defaultVoice,
 }: {
   projects: VideoProject[];
   demoLogins: DemoLogin[];
@@ -48,6 +49,8 @@ export function VideoStudio({
   hasWebsite: boolean;
   initialProjectId?: string | null;
   apiBase?: string;
+  /** The default voice profile's narrator: pre-selected when approving a proposal. */
+  defaultVoice?: string | null;
 }) {
   const router = useRouter();
   const [openId, setOpenId] = useState<string | null>(initialProjectId ?? projects[0]?.id ?? null);
@@ -126,7 +129,7 @@ export function VideoStudio({
               </li>
             ))}
           </ul>
-          <div className="min-w-0">{open ? <ProjectView key={open.id} project={open} accounts={accounts} mediaLibrary={mediaLibrary} apiBase={apiBase} /> : null}</div>
+          <div className="min-w-0">{open ? <ProjectView key={open.id} project={open} accounts={accounts} mediaLibrary={mediaLibrary} apiBase={apiBase} defaultVoice={defaultVoice} /> : null}</div>
         </div>
       )}
     </div>
@@ -368,7 +371,7 @@ function Progress({ live, compact }: { live: NonNullable<VideoProject["live"]>; 
   );
 }
 
-function ProjectView({ project: p, accounts, mediaLibrary, apiBase }: { project: VideoProject; accounts: Account[]; mediaLibrary: MediaAsset[]; apiBase?: string }) {
+function ProjectView({ project: p, accounts, mediaLibrary, apiBase, defaultVoice }: { project: VideoProject; accounts: Account[]; mediaLibrary: MediaAsset[]; apiBase?: string; defaultVoice?: string | null }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [rebuild, setRebuild] = useState(false);
@@ -423,7 +426,7 @@ function ProjectView({ project: p, accounts, mediaLibrary, apiBase }: { project:
       {p.status === "done" && <FilmView p={p} accounts={accounts} mediaLibrary={mediaLibrary} apiBase={apiBase} onRebuild={() => setRebuild((r) => !r)} rebuild={rebuild} />}
 
       {p.proposal && (p.status === "proposed" || (p.status === "done" && rebuild) || (p.status === "failed" && p.approval)) && (
-        <ProposalReview p={p} pending={pending} onApprove={(a) => run(() => approveVideo({ projectId: p.id, ...a }))} />
+        <ProposalReview p={p} pending={pending} defaultVoice={defaultVoice} onApprove={(a) => run(() => approveVideo({ projectId: p.id, ...a }))} />
       )}
 
       <CostLine p={p} />
@@ -538,7 +541,7 @@ function Headline({ text, accent }: { text: string; accent?: string | null }) {
   );
 }
 
-function ProposalReview({ p, pending, onApprove }: { p: VideoProject; pending: boolean; onApprove: (a: { concept: string; script: string[]; voice: string; captions: boolean }) => void }) {
+function ProposalReview({ p, pending, defaultVoice, onApprove }: { p: VideoProject; pending: boolean; defaultVoice?: string | null; onApprove: (a: { concept: string; script: string[]; voice: string; captions: boolean }) => void }) {
   const proposal = p.proposal!;
   const t = proposal.treatment;
   const [conceptKey, setConceptKey] = useState<string>(p.approval?.concept ?? t.recommended);
@@ -549,7 +552,10 @@ function ProposalReview({ p, pending, onApprove }: { p: VideoProject; pending: b
     return s;
   });
   const lines = scripts[concept.key] ?? [];
-  const [voice, setVoice] = useState<string>(p.approval?.voice ?? proposal.voices?.[0]?.voice ?? "af_heart");
+  const sampled = (proposal.voices ?? []).map((v: any) => v.voice as string);
+  const [voice, setVoice] = useState<string>(
+    p.approval?.voice ?? (defaultVoice && sampled.includes(defaultVoice) ? defaultVoice : sampled[0]) ?? defaultVoice ?? "af_heart",
+  );
   const [captions, setCaptions] = useState<boolean>(p.approval?.captions ?? VIDEO_FORMATS[(p.request?.format as VideoFormat) ?? "social"]?.captions ?? true);
   const mode: VoiceMode = (p.request?.voice_mode ?? proposal.voice_mode ?? "voiceover") as VoiceMode;
   const est = useMemo(() => estimateSeconds(lines, mode), [lines, mode]);

@@ -117,7 +117,7 @@ export function AiGeneratePanel({
             <Field name="niche" label="Niche / industry" defaultValue={brand?.niche} placeholder="e.g. specialty coffee roaster" required />
             <Field name="website" label="Website" defaultValue={brand?.website} placeholder="https://" />
             <Field name="audience" label="Audience" defaultValue={brand?.audience} placeholder="e.g. home baristas 25-40" />
-            <Field name="voice" label="Voice" defaultValue={brand?.voice} placeholder="e.g. warm, nerdy, no hype" />
+            <Field name="voice" label="Voice" defaultValue={brand?.voice} placeholder="e.g. warm, nerdy, no hype (a default voice profile in Autopilot → Voices overrides this)" />
             <Field name="locale" label="Language" defaultValue={brand?.locale ?? "en"} />
             <div className="sm:col-span-2">
               <Label htmlFor="description">What you offer</Label>

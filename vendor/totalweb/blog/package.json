@@ -8,9 +8,14 @@
     "./core": "./src/core/index.ts",
     "./components": "./src/components/index.ts",
     "./pages": "./src/pages/index.tsx",
-    "./server": "./src/server/index.ts"
+    "./server": "./src/server/index.ts",
+    "./autopilot": "./src/autopilot/index.ts",
+    "./autopilot/pages": "./src/autopilot/pages.tsx"
   },
-  "scripts": { "typecheck": "tsc -p .", "test": "vitest run" },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  },
   "dependencies": {
     "@totalweb/social": "workspace:*",
     "@totalweb/supabase": "workspace:*",
@@ -21,7 +26,10 @@
     "remark-gfm": "^4.0.1",
     "zod": "^4.1.0"
   },
-  "peerDependencies": { "next": ">=15", "react": ">=19" },
+  "peerDependencies": {
+    "next": ">=15",
+    "react": ">=19"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.1.0",

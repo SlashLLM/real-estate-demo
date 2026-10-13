@@ -1,4 +1,5 @@
 import type { BrandProfile } from "./engine-client";
+import { voiceText, type VoiceProfile } from "./voices";
 
 /**
  * Brand profile defaults supplied by the host site (TOTALWEB_BRAND = JSON, written by the site scaffold
@@ -16,6 +17,13 @@ export function siteBrandDefaults(): Partial<BrandProfile> {
   }
 }
 
-export function resolveBrand(workspaceName: string | undefined, saved: Partial<BrandProfile> | null | undefined): BrandProfile {
-  return { name: workspaceName ?? "", niche: "", ...siteBrandDefaults(), ...(saved ?? {}) } as BrandProfile;
+/** A voice profile (the chosen one, or the workspace default) replaces the profile's free-text voice. */
+export function resolveBrand(
+  workspaceName: string | undefined,
+  saved: Partial<BrandProfile> | null | undefined,
+  voice?: Pick<VoiceProfile, "description" | "examples"> | null,
+): BrandProfile {
+  const brand = { name: workspaceName ?? "", niche: "", ...siteBrandDefaults(), ...(saved ?? {}) } as BrandProfile;
+  const text = voice ? voiceText(voice) : "";
+  return text ? { ...brand, voice: text } : brand;
 }

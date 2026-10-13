@@ -1,7 +1,10 @@
 export const POST_STATUSES = ["draft", "in_review", "scheduled", "published", "archived"] as const;
 export type PostStatus = (typeof POST_STATUSES)[number];
 
-/** Allowed moves. Only a person (server action) ever reaches scheduled/published; the engine only creates drafts. */
+/**
+ * Allowed moves. The engine only creates drafts; a person (server action) moves them to scheduled/published, or the
+ * autopilot does (autoPublishPost) for articles its schedule ordered — both behind the same SEO checklist.
+ */
 const NEXT: Record<PostStatus, readonly PostStatus[]> = {
   draft: ["in_review", "scheduled", "published", "archived"],
   in_review: ["draft", "scheduled", "published", "archived"],

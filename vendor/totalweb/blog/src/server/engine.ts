@@ -1,19 +1,28 @@
 // Blog articles are written by ConGenEng (POST /v1/blog/generate), using the same signed request/callback
-// bridge as the social module. The engine only ever produces drafts; a person reviews and publishes.
+// bridge as the social module. The engine only ever produces drafts; a person reviews and publishes them, or, for
+// articles an autopilot schedule ordered, autoPublishPost does.
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@totalweb/supabase/admin";
-import { engineConfig, fetchEngineJob, resolveBrand, signedHeaders, siteUrl, verifySignature } from "@totalweb/social/server";
-import { readingMinutes, slugify } from "../core/index.ts";
+import { engineConfig, fetchEngineJob, resolveBrand, signedHeaders, siteUrl, verifySignature, voiceFor } from "@totalweb/social/server";
+import { readingMinutes, seoChecklist, slugify } from "../core/index.ts";
+import { autoFixSeo } from "../autopilot/plan";
 import type { BlogGenerationJob } from "../types";
 import { API_BASE } from "./env";
 
 export interface ArticleRequest {
-  topic: string;
+  /** Omitted: the engine recommends the next article (autopilot). */
+  topic?: string;
   focusKeyword?: string;
   audience?: string;
   tone?: string;
   lengthWords?: number;
   notes?: string;
+  /** Writing voice; omitted = the workspace's default voice profile (else the brand profile's voice). */
+  voiceProfileId?: string | null;
+  /** Topics being written right now, so an engine-picked topic doesn't repeat them. */
+  avoidTopics?: string[];
+  /** Set when an autopilot run made this request. */
+  autopilot?: { scheduleId: string; runId: string };
 }
 
 /** What the engine returns in `result.article` (kind: "blog_article"). */
@@ -32,6 +41,8 @@ export interface EngineArticle {
   tags?: string[];
   category?: string;
   notes?: string;
+  /** The topic the engine chose when none was given. */
+  topic?: string;
 }
 
 /** Starts an article job on the engine. Returns our blog_generation_jobs row id. */
@@ -40,7 +51,7 @@ export async function requestArticle(workspaceId: string, userId: string | null,
   const db = createAdminClient();
 
   const { data: ws } = await db.from("workspaces").select("name, settings").eq("id", workspaceId).single();
-  const brand = resolveBrand(ws?.name, ws?.settings?.brand);
+  const brand = resolveBrand(ws?.name, ws?.settings?.brand, await voiceFor(workspaceId, req.voiceProfileId));
   if (!brand.niche) throw new Error("Set the brand profile (at least the niche) in Social → AI studio before generating articles");
 
   // Existing posts: the engine avoids keyword cannibalisation and picks internal links from these.
@@ -61,13 +72,14 @@ export async function requestArticle(workspaceId: string, userId: string | null,
     workspace_id: workspaceId,
     job_ref: job.id,
     brand,
-    topic: req.topic,
+    topic: req.topic || null,
     focus_keyword: req.focusKeyword ?? null,
     audience: req.audience ?? brand.audience ?? null,
     tone: req.tone ?? brand.voice ?? null,
     length_words: req.lengthWords ?? 1500,
     notes: req.notes ?? null,
     existing_posts: (existing ?? []).map((p) => ({ ...p, url: `/blog/${p.slug}` })),
+    avoid_topics: req.avoidTopics ?? [],
     callback_url: `${siteUrl()}${API_BASE}/engine/callback`,
   });
   const res = await fetch(`${url}/v1/blog/generate`, {
@@ -124,6 +136,10 @@ export async function applyBlogResult(result: any): Promise<{ status: number; er
   if (!claimed?.length) return { duplicate: true };
 
   const a = result.article as EngineArticle;
+  // The engine chose the topic (autopilot): record it so lists and later runs can see it.
+  if (!job.request?.topic && a.topic) {
+    await db.from("blog_generation_jobs").update({ request: { ...job.request, topic: a.topic } }).eq("id", job.id);
+  }
   try {
     const slug = await uniqueSlug(job.workspace_id, slugify(a.slug || a.title) || "post");
     const { data: post, error } = await db
@@ -188,4 +204,32 @@ export async function uniqueSlug(workspaceId: string, wanted: string, exceptId?:
   const taken = new Set((data ?? []).filter((r) => r.id !== exceptId).map((r) => r.slug));
   if (!taken.has(wanted)) return wanted;
   for (let i = 2; ; i++) if (!taken.has(`${wanted}-${i}`)) return `${wanted}-${i}`;
+}
+
+/**
+ * Publishes (or schedules, when `at` is in the future) an article without human review: the autopilot's path.
+ * Derivable SEO gaps are filled first; if the checklist still has errors the post stays in review.
+ */
+export async function autoPublishPost(postId: string, at: Date): Promise<{ ok: true; slug: string; status: "published" | "scheduled" } | { ok: false; reason: string }> {
+  const db = createAdminClient();
+  const { data: post } = await db.from("blog_posts").select("*").eq("id", postId).single();
+  if (!post) return { ok: false, reason: "Post not found" };
+  if (post.status !== "in_review" && post.status !== "draft") return { ok: false, reason: `Post is ${post.status}` };
+  const fixed = { ...post, ...autoFixSeo(post) };
+  const errors = seoChecklist(fixed).filter((c) => c.level === "error" && !c.ok);
+  if (errors.length) return { ok: false, reason: errors.map((c) => c.msg).join("; ") };
+  const status = at.getTime() <= Date.now() ? "published" : "scheduled";
+  const { error } = await db
+    .from("blog_posts")
+    .update({
+      ...autoFixSeo(post),
+      status,
+      published_at: (status === "published" ? new Date() : at).toISOString(),
+      reviewed_by: null,
+      reviewed_at: null,
+    })
+    .eq("id", postId)
+    .in("status", ["in_review", "draft"]);
+  if (error) return { ok: false, reason: error.message };
+  return { ok: true, slug: post.slug, status };
 }

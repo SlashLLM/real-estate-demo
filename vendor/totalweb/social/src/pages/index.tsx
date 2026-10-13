@@ -15,6 +15,7 @@ import {
   VideoStudio,
 } from "../components";
 import { listDemoAccounts, listVideoProjects } from "../server/video";
+import { voiceFor } from "../server/voices";
 import { requireWorkspace } from "@totalweb/supabase/workspace";
 import { GENERATED_FILTERS, PLATFORM_KEYS, POST_TYPES, type GeneratedFilter, type PlatformKey, type PostType } from "../core/index.ts";
 import {
@@ -106,12 +107,13 @@ export async function SocialGeneratedPage({ searchParams }: { searchParams: Sear
 /** The video director: request → three concepts + script to approve → a film of the product's real screens. ?project=<id> opens one. */
 export async function SocialVideosPage({ searchParams }: { searchParams: SearchParams }) {
   const [params, workspace] = await Promise.all([searchParams, requireWorkspace()]);
-  const [projects, demoLogins, accounts, media, state] = await Promise.all([
+  const [projects, demoLogins, accounts, media, state, voice] = await Promise.all([
     listVideoProjects(workspace.id),
     listDemoAccounts(workspace.id),
     listAccounts(),
     listMedia(),
     getGenerationState(),
+    voiceFor(workspace.id),
   ]);
   return (
     <>
@@ -124,6 +126,7 @@ export async function SocialVideosPage({ searchParams }: { searchParams: SearchP
         hasWebsite={!!state.brand?.website}
         initialProjectId={params.project ?? null}
         apiBase={API_BASE}
+        defaultVoice={voice?.narrator_voice ?? null}
       />
     </>
   );

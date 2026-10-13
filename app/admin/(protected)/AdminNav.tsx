@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const SECTIONS = [
   ["Social", "/admin/social"],
   ["Blog", "/admin/blog"],
+  ["Autopilot", "/admin/autopilot"],
   ["CRM", "/admin/crm"],
 ] as const;
 

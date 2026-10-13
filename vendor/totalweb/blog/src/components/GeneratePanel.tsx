@@ -68,7 +68,7 @@ export function GeneratePanel({ jobs, reviewHref }: { jobs: BlogGenerationJob[];
             </div>
             <div>
               <Label htmlFor="tone">Tone (optional)</Label>
-              <Input id="tone" name="tone" placeholder="Defaults to the brand voice" />
+              <Input id="tone" name="tone" placeholder="Defaults to the default voice profile" />
             </div>
           </div>
           <div>
